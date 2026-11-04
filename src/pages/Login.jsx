@@ -58,7 +58,7 @@ function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-2.5">
+          <form onSubmit={handleSubmit} aria-busy={loading} className="space-y-2.5">
             <div>
               <label className="block text-zinc-400 text-sm font-medium mb-1">
                 {t("email")}
@@ -115,6 +115,12 @@ function Login() {
             >
               {loading ? t("logging_in") : t("login_button")}
             </button>
+            {loading && (
+              <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-center text-sm text-amber-200">
+                <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-amber-200/30 border-t-amber-200" />
+                {t("login_connecting")}
+              </p>
+            )}
           </form>
 
           <p className="text-zinc-500 text-sm text-center mt-3">

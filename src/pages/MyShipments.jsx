@@ -16,7 +16,8 @@ const statusStyles = {
 const progressStages = ["PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED"];
 
 function MyShipments() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   let user = null;
   try {
     user = JSON.parse(localStorage.getItem("user"));
@@ -110,7 +111,7 @@ function MyShipments() {
           </div>
           <div className="bg-zinc-950/75 p-4 backdrop-blur-xl sm:p-5">
             <p className="text-xs text-zinc-400">{t("shipments_total_value")}</p>
-            <p className="mt-2 inline-flex items-center gap-2 text-2xl font-bold text-amber-100"><CircleDollarSign size={19} aria-hidden="true" />TSh {shipments.reduce((total, shipment) => total + (Number(shipment.price) || 0), 0).toLocaleString()}</p>
+            <p className="mt-2 inline-flex items-center gap-2 text-2xl font-bold text-amber-100"><CircleDollarSign size={19} aria-hidden="true" />TSh {shipments.reduce((total, shipment) => total + (Number(shipment.price) || 0), 0).toLocaleString(locale)}</p>
           </div>
         </section>
 
@@ -138,7 +139,7 @@ function MyShipments() {
           <ul className="space-y-3">
             {visibleShipments.map((shipment) => {
               const stage = progressStages.indexOf(shipment.status);
-              const date = shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString() : t("dashboard_date_unavailable");
+              const date = shipment.createdAt ? new Date(shipment.createdAt).toLocaleDateString(locale) : t("dashboard_date_unavailable");
               return (
                 <li key={shipment.id}>
                   <article className="rounded-2xl border border-white/10 bg-zinc-950/65 p-4 shadow-lg shadow-black/10 backdrop-blur-xl transition hover:border-sky-200/20 sm:p-5">
@@ -158,7 +159,7 @@ function MyShipments() {
                           <span className="inline-flex items-center gap-1.5"><Truck size={13} aria-hidden="true" />{shipment.cargoType || "—"}</span>
                           <span>{shipment.weightKg ?? "—"} kg</span>
                           {shipment.distanceKm != null && <span className="inline-flex items-center gap-1"><Route size={13} aria-hidden="true" />{shipment.distanceKm} km</span>}
-                          <span className="font-semibold text-amber-100">{shipment.price == null ? t("booking_cost_pending") : `TSh ${Number(shipment.price).toLocaleString()}`}</span>
+                          <span className="font-semibold text-amber-100">{shipment.price == null ? t("booking_cost_pending") : `TSh ${Number(shipment.price).toLocaleString(locale)}`}</span>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row">

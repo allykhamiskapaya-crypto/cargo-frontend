@@ -7,6 +7,11 @@ const approvalStatuses = ["ALL", "PENDING_APPROVAL", "APPROVED", "REJECTED"];
 const adminSections = ["overview", "drivers", "shipments", "complaints", "commissions", "notifications", "audit", "health"];
 const shipmentStatuses = ["", "PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "CANCELLED"];
 const complaintStatuses = ["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"];
+const shipmentStatusLabel = (t, status) => status
+  ? t(`driver_status_${String(status).toLowerCase()}`, { defaultValue: status })
+  : t("admin_all_statuses");
+const complaintStatusLabel = (t, status) =>
+  t(`complaint_status_${String(status).toLowerCase()}`, { defaultValue: status });
 const vehiclePhotoFields = [
   { field: "frontPhoto", contentTypeField: "frontPhotoContentType", label: "vehicle_front_photo" },
   { field: "rearPhoto", contentTypeField: "rearPhotoContentType", label: "vehicle_back_photo" },
@@ -15,7 +20,8 @@ const vehiclePhotoFields = [
 ];
 
 function AdminDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const initialParams = new URLSearchParams(window.location.search);
@@ -398,11 +404,11 @@ function AdminDashboard() {
     if (!selectedComplaint?.complaint) return;
     if (["RESOLVED", "REJECTED"].includes(selectedComplaint.complaint.status)
         && !complaintResolution.trim()) {
-      setError("A resolution note is required to close a complaint.");
+      setError(t("admin_complaint_resolution_required"));
       return;
     }
     if (complaintResolution.trim().length > 1000) {
-      setError("Resolution note must be 1000 characters or fewer.");
+      setError(t("admin_complaint_resolution_max"));
       return;
     }
     try {
@@ -412,7 +418,7 @@ function AdminDashboard() {
       });
       setComplaintResolution("");
       setRefreshKey((key) => key + 1);
-      setSuccess("Complaint updated.");
+      setSuccess(t("admin_complaint_updated"));
     } catch (requestError) {
       setError(typeof requestError.response?.data === "string"
         ? requestError.response.data : t("backend_error"));
@@ -451,7 +457,7 @@ function AdminDashboard() {
           </div>
         )}
 
-        <nav className="mb-6 grid grid-cols-2 gap-2 pb-2 min-[420px]:grid-cols-3 sm:flex sm:flex-wrap" aria-label="Admin sections">
+        <nav className="mb-6 grid grid-cols-2 gap-2 pb-2 min-[420px]:grid-cols-3 sm:flex sm:flex-wrap" aria-label={t("admin_sections")}>
           {adminSections.map((section) => (
             <button
               key={section}
@@ -469,27 +475,27 @@ function AdminDashboard() {
                   : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-amber-400/60 hover:text-amber-200"
               }`}
             >
-              {section === "notifications" ? `Notifications (${unreadCount})` : section === "commissions" ? t("admin_commission_payments") : section === "drivers" ? t("admin_driver_verification_queue") : section}
+              {t(`admin_section_${section}`, { count: unreadCount })}
             </button>
           ))}
         </nav>
 
         {activeSection === "overview" && (
-          <section aria-label="Admin overview">
+          <section aria-label={t("admin_section_overview")}>
             {!overview ? (
               <p className="mb-5 rounded-xl border border-white/10 bg-zinc-950/70 p-5 text-sm text-zinc-400">
-                {error ? "Overview is unavailable." : "Loading overview…"}
+                {error ? t("admin_overview_unavailable") : t("admin_overview_loading")}
               </p>
             ) : (
               <div className="mb-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
                 {[
-                  ["Registered drivers", overview.totalDrivers, "drivers", "ALL"],
-                  ["Pending approvals", overview.pendingApprovals, "drivers", "PENDING_APPROVAL"],
-                  ["Active shipments", overview.activeShipments, "shipments", null],
-                  ["Completed today", overview.completedToday, "shipments", "DELIVERED"],
-                  ["Delayed shipments", overview.delayedShipments, "shipments", "delayed"],
-                  ["Unresolved complaints", overview.unresolvedComplaints, "complaints", "OPEN"],
-                  ["Unread notifications", overview.unreadNotifications, "notifications", null],
+                  ["admin_metric_registered_drivers", overview.totalDrivers, "drivers", "ALL"],
+                  ["admin_metric_pending_approvals", overview.pendingApprovals, "drivers", "PENDING_APPROVAL"],
+                  ["admin_metric_active_shipments", overview.activeShipments, "shipments", null],
+                  ["admin_metric_completed_today", overview.completedToday, "shipments", "DELIVERED"],
+                  ["admin_metric_delayed_shipments", overview.delayedShipments, "shipments", "delayed"],
+                  ["admin_metric_unresolved_complaints", overview.unresolvedComplaints, "complaints", "OPEN"],
+                  ["admin_metric_unread_notifications", overview.unreadNotifications, "notifications", null],
                 ].map(([label, value, section, filter]) => (
                   <button
                     key={label}
@@ -506,7 +512,7 @@ function AdminDashboard() {
                     }}
                     className="rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left transition hover:border-amber-400/60 hover:bg-zinc-900"
                   >
-                    <span className="block text-sm text-zinc-400">{label}</span>
+                    <span className="block text-sm text-zinc-400">{t(label)}</span>
                     <span className="mt-2 block text-2xl font-bold text-amber-300">{value}</span>
                   </button>
                 ))}
@@ -521,22 +527,22 @@ function AdminDashboard() {
               <input
                 value={shipmentQuery}
                 onChange={(event) => { setLoadingSection(true); setShipmentQuery(event.target.value); }}
-                placeholder="Search shipment, customer, driver or route"
-                aria-label="Search shipments"
+                placeholder={t("admin_search_shipments_placeholder")}
+                aria-label={t("admin_search_shipments")}
                 className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
               />
               <select value={shipmentStatus} onChange={(event) => { setLoadingSection(true); setShipmentStatus(event.target.value); }}
-                aria-label="Filter shipment status"
+                aria-label={t("admin_filter_shipment_status")}
                 className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white">
-                {shipmentStatuses.map((status) => <option key={status || "all"} value={status}>{status || "All statuses"}</option>)}
+                {shipmentStatuses.map((status) => <option key={status || "all"} value={status}>{shipmentStatusLabel(t, status)}</option>)}
               </select>
               <label className="flex items-center gap-2 text-sm text-zinc-300">
                 <input type="checkbox" checked={delayedOnly} onChange={(event) => { setLoadingSection(true); setDelayedOnly(event.target.checked); }} />
-                Delayed only
+                {t("admin_delayed_only")}
               </label>
             </div>
-            {loadingSection ? <p className="p-5 text-sm text-zinc-400">Loading shipments…</p>
-              : shipments.length === 0 ? <p className="rounded-xl border border-white/10 p-5 text-sm text-zinc-400">No shipments match these filters.</p>
+            {loadingSection ? <p className="p-5 text-sm text-zinc-400">{t("admin_shipments_loading")}</p>
+              : shipments.length === 0 ? <p className="rounded-xl border border-white/10 p-5 text-sm text-zinc-400">{t("admin_shipments_empty")}</p>
                 : (
                   <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(17rem,1fr)]">
                     <ul className="space-y-2 xl:hidden">
@@ -548,14 +554,14 @@ function AdminDashboard() {
                             className="w-full rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left transition hover:border-amber-400/40"
                           >
                             <span className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="font-semibold text-amber-200">#{shipment.id}{shipment.delayed ? " · Delayed" : ""}</span>
-                              <span className="text-xs text-zinc-400">{shipment.status}</span>
+                              <span className="font-semibold text-amber-200">#{shipment.id}{shipment.delayed ? ` · ${t("admin_delayed")}` : ""}</span>
+                              <span className="text-xs text-zinc-400">{shipmentStatusLabel(t, shipment.status)}</span>
                             </span>
                             <span className="mt-3 grid gap-2 text-sm">
-                              <span><span className="text-zinc-500">Customer: </span>{shipment.customerName}</span>
-                              <span><span className="text-zinc-500">Driver: </span>{shipment.driverName || "Unassigned"}</span>
-                              <span><span className="text-zinc-500">Vehicle: </span>{shipment.vehiclePlateNumber || "Not linked"}</span>
-                              <span className="break-words"><span className="text-zinc-500">Route: </span>{shipment.origin} → {shipment.destination}</span>
+                              <span><span className="text-zinc-500">{t("admin_customer")}: </span>{shipment.customerName}</span>
+                              <span><span className="text-zinc-500">{t("admin_driver")}: </span>{shipment.driverName || t("admin_unassigned")}</span>
+                              <span><span className="text-zinc-500">{t("admin_vehicle")}: </span>{shipment.vehiclePlateNumber || t("admin_not_linked")}</span>
+                              <span className="break-words"><span className="text-zinc-500">{t("admin_route")}: </span>{shipment.origin} → {shipment.destination}</span>
                               <span className="break-words text-xs text-zinc-500">{shipment.createdAt} · {shipment.updatedAt}</span>
                             </span>
                           </button>
@@ -564,17 +570,17 @@ function AdminDashboard() {
                     </ul>
                     <div className="hidden overflow-x-auto rounded-xl border border-white/10 xl:block">
                       <table className="w-full min-w-[760px] text-left text-sm">
-                        <thead className="bg-zinc-900 text-zinc-400"><tr>{["ID", "Customer", "Driver", "Vehicle", "Route", "Status", "Created", "Updated"].map((cell) => <th key={cell} className="px-3 py-3 font-medium">{cell}</th>)}</tr></thead>
+                        <thead className="bg-zinc-900 text-zinc-400"><tr>{["id", "customer", "driver", "vehicle", "route", "status", "created", "updated"].map((cell) => <th key={cell} className="px-3 py-3 font-medium">{t(`admin_column_${cell}`)}</th>)}</tr></thead>
                         <tbody className="divide-y divide-zinc-800">
                           {shipments.map((shipment) => (
                             <tr key={shipment.id} className={`cursor-pointer hover:bg-zinc-900 ${shipment.delayed ? "bg-red-950/20" : ""}`}
                               onClick={() => setSelectedShipmentId(shipment.id)}>
-                              <td className="px-3 py-3 text-amber-200">#{shipment.id}{shipment.delayed ? " · Delayed" : ""}</td>
+                              <td className="px-3 py-3 text-amber-200">#{shipment.id}{shipment.delayed ? ` · ${t("admin_delayed")}` : ""}</td>
                               <td className="px-3 py-3">{shipment.customerName}</td>
-                              <td className="px-3 py-3">{shipment.driverName || "Unassigned"}</td>
-                              <td className="px-3 py-3">{shipment.vehiclePlateNumber || "Not linked"}</td>
+                              <td className="px-3 py-3">{shipment.driverName || t("admin_unassigned")}</td>
+                              <td className="px-3 py-3">{shipment.vehiclePlateNumber || t("admin_not_linked")}</td>
                               <td className="px-3 py-3">{shipment.origin} → {shipment.destination}</td>
-                              <td className="px-3 py-3">{shipment.status}</td>
+                              <td className="px-3 py-3">{shipmentStatusLabel(t, shipment.status)}</td>
                               <td className="px-3 py-3">{shipment.createdAt}</td>
                               <td className="px-3 py-3">{shipment.updatedAt}</td>
                             </tr>
@@ -583,13 +589,13 @@ function AdminDashboard() {
                       </table>
                     </div>
                     <aside className="rounded-xl border border-white/10 bg-zinc-950/80 p-4">
-                      <h2 className="mb-3 font-semibold">Shipment status history</h2>
-                      {!selectedShipmentId ? <p className="text-sm text-zinc-500">Select a shipment to inspect its recorded history.</p>
-                        : shipmentHistory.length === 0 ? <p className="text-sm text-zinc-500">No recorded tracking history.</p>
+                      <h2 className="mb-3 font-semibold">{t("admin_shipment_status_history")}</h2>
+                      {!selectedShipmentId ? <p className="text-sm text-zinc-500">{t("admin_select_shipment_history")}</p>
+                        : shipmentHistory.length === 0 ? <p className="text-sm text-zinc-500">{t("admin_no_shipment_history")}</p>
                           : <ol className="space-y-3">{shipmentHistory.map((entry, index) => (
                             <li key={`${entry.timestamp}-${index}`} className="border-l border-amber-400/50 pl-3 text-sm">
-                              <p className="font-medium text-amber-200">{entry.status}</p>
-                              <p className="text-zinc-400">{entry.timestamp} · {entry.location || "No location recorded"}</p>
+                              <p className="font-medium text-amber-200">{shipmentStatusLabel(t, entry.status)}</p>
+                              <p className="text-zinc-400">{entry.timestamp} · {entry.location || t("admin_no_location")}</p>
                             </li>
                           ))}</ol>}
                     </aside>
@@ -602,13 +608,13 @@ function AdminDashboard() {
           <section className="grid gap-4 lg:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.4fr)]">
             <div className="space-y-3">
               <select value={complaintStatusFilter} onChange={(event) => { setLoadingSection(true); setComplaintStatusFilter(event.target.value); }}
-                aria-label="Filter complaint status"
+                aria-label={t("admin_filter_complaint_status")}
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white">
-                <option value="">All complaint statuses</option>
-                {complaintStatuses.map((status) => <option key={status}>{status}</option>)}
+                <option value="">{t("admin_all_complaint_statuses")}</option>
+                {complaintStatuses.map((status) => <option key={status} value={status}>{complaintStatusLabel(t, status)}</option>)}
               </select>
-              {loadingSection ? <p className="p-4 text-sm text-zinc-400">Loading complaints…</p>
-                : complaints.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-zinc-400">No complaints found.</p>
+              {loadingSection ? <p className="p-4 text-sm text-zinc-400">{t("admin_complaints_loading")}</p>
+                : complaints.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-zinc-400">{t("admin_complaints_empty")}</p>
                   : complaints.map((complaint) => (
                     <button type="button" key={complaint.id} onClick={() => {
                       setSelectedComplaint({ id: complaint.id });
@@ -616,44 +622,45 @@ function AdminDashboard() {
                       setComplaintEvidence(null);
                       setComplaintActions([]);
                     }} className="w-full rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left hover:border-amber-400/50">
-                      <span className="flex justify-between gap-2 font-semibold"><span>Complaint #{complaint.id}</span><span className="text-amber-200">{complaint.status}</span></span>
-                      <span className="mt-2 block text-xs text-zinc-400">Shipment #{complaint.shipmentId} · {complaint.reporterName}</span>
+                      <span className="flex justify-between gap-2 font-semibold"><span>{t("admin_complaint_number", { id: complaint.id })}</span><span className="text-amber-200">{complaintStatusLabel(t, complaint.status)}</span></span>
+                      <span className="mt-2 block text-xs text-zinc-400">{t("admin_shipment_number", { id: complaint.shipmentId })} · {complaint.reporterName}</span>
                       <span className="mt-2 block line-clamp-2 text-sm text-zinc-300">{complaint.description}</span>
                     </button>
                   ))}
             </div>
             <article className="min-w-0 rounded-xl border border-white/10 bg-zinc-950/80 p-5">
-              {!selectedComplaint?.complaint ? <p className="text-sm text-zinc-500">Select a complaint to review it.</p> : (
+              {!selectedComplaint?.complaint ? <p className="text-sm text-zinc-500">{t("admin_select_complaint")}</p> : (
                 <>
-                  <h2 className="text-lg font-semibold">Complaint #{selectedComplaint.complaint.id}</h2>
+                    <h2 className="text-lg font-semibold">{t("admin_complaint_number", { id: selectedComplaint.complaint.id })}</h2>
                   <p className="mt-2 text-sm text-zinc-300">{selectedComplaint.complaint.description}</p>
-                  <p className="mt-2 text-xs text-zinc-500">Shipment #{selectedComplaint.complaint.shipmentId} · {selectedComplaint.complaint.reporterName} · Assigned reviewer: {selectedComplaint.complaint.assignedReviewerName || "Unassigned"}</p>
+                    <p className="mt-2 text-xs text-zinc-500">{t("admin_shipment_number", { id: selectedComplaint.complaint.shipmentId })} · {selectedComplaint.complaint.reporterName} · {t("admin_assigned_reviewer")}: {selectedComplaint.complaint.assignedReviewerName || t("admin_unassigned")}</p>
                   {complaintEvidence && (
                     <div className="my-4">
                       {complaintEvidence.contentType === "application/pdf"
-                        ? <iframe title="Complaint evidence" src={`data:application/pdf;base64,${complaintEvidence.base64Data}`} className="h-80 w-full rounded-lg bg-white" />
-                        : <img alt="Complaint evidence" src={`data:${complaintEvidence.contentType};base64,${complaintEvidence.base64Data}`} className="max-h-80 rounded-lg object-contain" />}
+                          ? <iframe title={t("admin_complaint_evidence")} src={`data:application/pdf;base64,${complaintEvidence.base64Data}`} className="h-80 w-full rounded-lg bg-white" />
+                          : <img alt={t("admin_complaint_evidence")} src={`data:${complaintEvidence.contentType};base64,${complaintEvidence.base64Data}`} className="max-h-80 rounded-lg object-contain" />}
                     </div>
                   )}
-                  <h3 className="mt-4 font-medium">Shipment history</h3>
+                    <h3 className="mt-4 font-medium">{t("admin_shipment_history")}</h3>
                   <ul className="mt-2 max-h-40 space-y-2 overflow-auto text-xs text-zinc-400">
-                    {selectedComplaint.shipmentHistory.map((entry, index) => <li key={`${entry.timestamp}-${index}`}>{entry.timestamp} · {entry.status} · {entry.location || "No location recorded"}</li>)}
+                      {selectedComplaint.shipmentHistory.map((entry, index) => <li key={`${entry.timestamp}-${index}`}>{entry.timestamp} · {shipmentStatusLabel(t, entry.status)} · {entry.location || t("admin_no_location")}</li>)}
                   </ul>
-                  <label className="mt-4 block text-sm text-zinc-300">Resolution status
+                    <label className="mt-4 block text-sm text-zinc-300">{t("admin_resolution_status")}
                     <select value={selectedComplaint.complaint.status}
                       onChange={(event) => setSelectedComplaint((current) => ({
                         ...current, complaint: { ...current.complaint, status: event.target.value },
                       }))}
                       className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white">
-                      {complaintStatuses.map((status) => <option key={status}>{status}</option>)}
+                      {complaintStatuses.map((status) => <option key={status} value={status}>{complaintStatusLabel(t, status)}</option>)}
                     </select>
                   </label>
-                  <label className="mt-3 block text-sm text-zinc-300">Resolution note
+                  <label className="mt-3 block text-sm text-zinc-300">{t("admin_resolution_note")}
                     <textarea value={complaintResolution} maxLength={1000} onChange={(event) => setComplaintResolution(event.target.value)}
+                      placeholder={t("admin_resolution_note_placeholder")}
                       className="mt-1 min-h-20 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white" />
                   </label>
-                  <button type="button" onClick={updateComplaint} className="mt-3 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950">Save complaint update</button>
-                  <h3 className="mt-5 font-medium">Recorded actions</h3>
+                  <button type="button" onClick={updateComplaint} className="mt-3 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950">{t("admin_save_complaint_update")}</button>
+                  <h3 className="mt-5 font-medium">{t("admin_recorded_actions")}</h3>
                   <ul className="mt-2 space-y-1 text-xs text-zinc-400">{complaintActions.map((entry) => <li key={entry.id}>{entry.timestamp} · {entry.action} · {entry.metadata}</li>)}</ul>
                 </>
               )}
@@ -673,8 +680,8 @@ function AdminDashboard() {
                   <article key={payment.id} className="flex flex-col justify-between gap-4 rounded-xl border border-white/10 bg-zinc-950/75 p-4 sm:flex-row sm:items-center">
                     <div className="min-w-0">
                       <p className="font-semibold text-white">{payment.driverName} <span className="text-zinc-500">#{payment.driverId}</span></p>
-                      <p className="mt-1 text-sm text-amber-100">TSh {Number(payment.amount).toLocaleString()} · {payment.reference}</p>
-                      <p className="mt-1 text-xs text-zinc-500">{payment.submittedAt ? new Date(payment.submittedAt).toLocaleString() : ""}</p>
+                      <p className="mt-1 text-sm text-amber-100">TSh {Number(payment.amount).toLocaleString(locale)} · {payment.reference}</p>
+                      <p className="mt-1 text-xs text-zinc-500">{payment.submittedAt ? new Date(payment.submittedAt).toLocaleString(locale) : ""}</p>
                     </div>
                     <div className="flex gap-2">
                       <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "reject")} className="min-h-10 rounded-lg border border-rose-200/25 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-200/10 disabled:opacity-50">{t("admin_commission_reject")}</button>
@@ -687,16 +694,16 @@ function AdminDashboard() {
 
         {activeSection === "notifications" && (
           <section className="space-y-3">
-            <div className="flex justify-end"><button type="button" disabled={!unreadCount} onClick={markAllNotificationsRead} className="rounded-lg border border-amber-400/40 px-3 py-2 text-sm text-amber-200 disabled:opacity-40">Mark all as read</button></div>
-            {loadingSection ? <p className="p-5 text-sm text-zinc-400">Loading notifications…</p>
-              : notifications.length === 0 ? <p className="rounded-xl border border-white/10 p-5 text-sm text-zinc-400">No notifications.</p>
+            <div className="flex justify-end"><button type="button" disabled={!unreadCount} onClick={markAllNotificationsRead} className="rounded-lg border border-amber-400/40 px-3 py-2 text-sm text-amber-200 disabled:opacity-40">{t("admin_mark_all_read")}</button></div>
+            {loadingSection ? <p className="p-5 text-sm text-zinc-400">{t("admin_notifications_loading")}</p>
+              : notifications.length === 0 ? <p className="rounded-xl border border-white/10 p-5 text-sm text-zinc-400">{t("admin_notifications_empty")}</p>
                 : notifications.map((notification) => (
                   <article key={notification.id} className={`rounded-xl border p-4 ${notification.read ? "border-white/10 bg-zinc-950/70" : "border-amber-400/40 bg-amber-400/5"}`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div><p className="font-medium">{notification.message}</p><p className="mt-1 text-xs text-zinc-400">{notification.type} · {notification.priority} · {notification.timestamp}</p></div>
                       <div className="flex gap-3">
-                        {notification.relatedLink && <a href={notification.relatedLink} className="text-sm text-amber-200 underline">Open related record</a>}
-                        {!notification.read && <button type="button" onClick={() => markNotificationRead(notification.id)} className="text-sm text-amber-200 underline">Mark read</button>}
+                        {notification.relatedLink && <a href={notification.relatedLink} className="text-sm text-amber-200 underline">{t("admin_open_related_record")}</a>}
+                        {!notification.read && <button type="button" onClick={() => markNotificationRead(notification.id)} className="text-sm text-amber-200 underline">{t("admin_mark_read")}</button>}
                       </div>
                     </div>
                   </article>
@@ -706,25 +713,25 @@ function AdminDashboard() {
 
         {activeSection === "audit" && (
           <section className="overflow-hidden rounded-xl border border-white/10">
-            {loadingSection ? <p className="p-5 text-sm text-zinc-400">Loading audit entries…</p>
-              : auditEntries.length === 0 ? <p className="p-5 text-sm text-zinc-400">No audit events recorded.</p>
+            {loadingSection ? <p className="p-5 text-sm text-zinc-400">{t("admin_audit_loading")}</p>
+              : auditEntries.length === 0 ? <p className="p-5 text-sm text-zinc-400">{t("admin_audit_empty")}</p>
                 : <>
                   <ul className="divide-y divide-zinc-800 xl:hidden">
                     {auditEntries.map((entry) => (
                       <li key={entry.id} className="space-y-2 bg-zinc-950/80 p-4 text-sm">
                         <p className="break-words font-semibold text-amber-200">{entry.action}</p>
                         <dl className="grid gap-2 text-xs min-[420px]:grid-cols-2">
-                          <div><dt className="text-zinc-500">Time</dt><dd className="break-words text-zinc-200">{entry.timestamp}</dd></div>
-                          <div><dt className="text-zinc-500">Actor ID</dt><dd className="text-zinc-200">{entry.actorId}</dd></div>
-                          <div><dt className="text-zinc-500">Record</dt><dd className="break-words text-zinc-200">{entry.recordType} #{entry.recordId}</dd></div>
-                          <div className="min-w-0"><dt className="text-zinc-500">Metadata</dt><dd className="break-words text-zinc-200">{entry.metadata}</dd></div>
+                          <div><dt className="text-zinc-500">{t("admin_column_time")}</dt><dd className="break-words text-zinc-200">{entry.timestamp}</dd></div>
+                          <div><dt className="text-zinc-500">{t("admin_column_actor_id")}</dt><dd className="text-zinc-200">{entry.actorId}</dd></div>
+                          <div><dt className="text-zinc-500">{t("admin_column_record")}</dt><dd className="break-words text-zinc-200">{entry.recordType} #{entry.recordId}</dd></div>
+                          <div className="min-w-0"><dt className="text-zinc-500">{t("admin_column_metadata")}</dt><dd className="break-words text-zinc-200">{entry.metadata}</dd></div>
                         </dl>
                       </li>
                     ))}
                   </ul>
                   <div className="hidden overflow-x-auto xl:block">
                     <table className="w-full min-w-[650px] text-left text-sm">
-                      <thead className="bg-zinc-900 text-zinc-400"><tr>{["Time", "Actor ID", "Action", "Record", "Metadata"].map((header) => <th key={header} className="px-3 py-3">{header}</th>)}</tr></thead>
+                      <thead className="bg-zinc-900 text-zinc-400"><tr>{["time", "actor_id", "action", "record", "metadata"].map((header) => <th key={header} className="px-3 py-3">{t(`admin_column_${header}`)}</th>)}</tr></thead>
                       <tbody className="divide-y divide-zinc-800">{auditEntries.map((entry) => (
                         <tr key={entry.id}><td className="px-3 py-3">{entry.timestamp}</td><td className="px-3 py-3">{entry.actorId}</td><td className="px-3 py-3">{entry.action}</td><td className="px-3 py-3">{entry.recordType} #{entry.recordId}</td><td className="px-3 py-3">{entry.metadata}</td></tr>
                       ))}</tbody>
@@ -736,12 +743,17 @@ function AdminDashboard() {
 
         {activeSection === "health" && (
           <section className="rounded-xl border border-white/10 bg-zinc-950/80 p-5">
-            {!health ? <p className="text-sm text-zinc-400">{loadingSection ? "Loading system health…" : "Health information is unavailable."}</p>
+            {!health ? <p className="text-sm text-zinc-400">{loadingSection ? t("admin_health_loading") : t("admin_health_unavailable")}</p>
               : <dl className="grid gap-4 sm:grid-cols-2">
-                {[["API", health.api], ["Database", health.database], ["Backups", health.backups], ["Last backup success", health.lastBackupSuccess || "Not verified"]].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-zinc-800 p-4"><dt className="text-sm text-zinc-400">{label}</dt><dd className={`mt-1 font-semibold ${value === "UP" ? "text-emerald-300" : "text-amber-200"}`}>{value}</dd></div>
+                {[
+                  [t("admin_health_api"), health.api],
+                  [t("admin_health_database"), health.database],
+                  [t("admin_health_backups"), health.backups],
+                  [t("admin_health_last_backup"), health.lastBackupSuccess || t("admin_not_verified")],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-zinc-800 p-4"><dt className="text-sm text-zinc-400">{label}</dt><dd className={`mt-1 font-semibold ${value === "UP" ? "text-emerald-300" : "text-amber-200"}`}>{["UP", "DOWN", "UNKNOWN"].includes(String(value).toUpperCase()) ? t(`admin_health_status_${String(value).toLowerCase()}`) : value}</dd></div>
                 ))}
-                <p className="text-xs text-amber-200 sm:col-span-2">Backup state is informational only; no backup artifact or restore has been verified by this application.</p>
+                <p className="text-xs text-amber-200 sm:col-span-2">{t("admin_backup_disclaimer")}</p>
               </dl>}
           </section>
         )}
@@ -771,7 +783,7 @@ function AdminDashboard() {
                   : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-amber-400/60 hover:text-amber-200"
               }`}
             >
-              {status === "ALL" ? "All drivers" : t(`approval_${status}`)}
+              {status === "ALL" ? t("admin_all_drivers") : t(`approval_${status}`)}
             </button>
           ))}
         </div>

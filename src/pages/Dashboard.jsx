@@ -31,7 +31,8 @@ const shipmentStatusStyles = {
 };
 
 function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const role = String(user?.role || "").replace(/^ROLE_/, "");
@@ -91,7 +92,7 @@ function Dashboard() {
       const date = new Date(value);
       return Number.isNaN(date.getTime())
         ? t("dashboard_date_unavailable")
-        : date.toLocaleDateString();
+        : date.toLocaleDateString(locale);
     };
 
     const toggleNotifications = () => {
@@ -156,7 +157,7 @@ function Dashboard() {
                             <p className="text-sm font-medium text-zinc-100">
                               {t("dashboard_shipment_number", { id: shipment.id })}
                               <span className="mx-1.5 text-zinc-600">·</span>
-                              <span className="text-amber-200">{shipment.status}</span>
+                              <span className="text-amber-200">{t(`driver_status_${String(shipment.status).toLowerCase()}`, { defaultValue: shipment.status })}</span>
                             </p>
                             <p className="mt-1 text-xs text-zinc-500">
                               {shipment.origin} <span className="px-1 text-zinc-700">→</span> {shipment.destination}
@@ -315,7 +316,7 @@ function Dashboard() {
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{t("dashboard_shipment_number", { id: shipment.id })}</span>
                             <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${shipmentStatusStyles[shipment.status] || "border-white/10 bg-white/5 text-zinc-300"}`}>
-                              {shipment.status}
+                              {t(`driver_status_${String(shipment.status).toLowerCase()}`, { defaultValue: shipment.status })}
                             </span>
                           </div>
                           <div className="grid max-w-xl gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">

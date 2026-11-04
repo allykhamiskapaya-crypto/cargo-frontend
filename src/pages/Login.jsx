@@ -41,7 +41,7 @@ function Login() {
             <div className="mb-3 h-28 w-28 overflow-hidden rounded-2xl border border-amber-500/30 bg-zinc-900 shadow-md">
               <img
                 src={bebaLogo}
-                alt="BEBA, kwa usafirishaji wa uhakika na salama"
+                alt={t("brand_logo_alt")}
                 className="h-full w-full object-contain p-1"
               />
             </div>
@@ -68,7 +68,7 @@ function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="mfano@email.com"
+                placeholder={t("email_placeholder")}
                 className="w-full rounded-xl border border-zinc-700/80 bg-zinc-900/70 px-4 py-2 text-white placeholder-zinc-500 transition focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
@@ -89,7 +89,7 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={t(showPassword ? "password_hide" : "password_show")}
                   aria-pressed={showPassword}
                   className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-zinc-400 transition hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500"
                 >

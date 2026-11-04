@@ -6,7 +6,8 @@ import api from "../api/axiosClient";
 const paymentMethods = ["MPESA", "TIGOPESA", "CASH", "CARD"];
 
 function Payment() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   let user = null;
 
@@ -182,12 +183,12 @@ function Payment() {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                       <h2 className="text-white font-medium">
-                        #{shipment.id}: {shipment.origin} to {shipment.destination}
+                        #{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}
                       </h2>
                       <p className="text-zinc-500 text-sm mt-1">
                         {shipment.cargoType} · {t("payment_amount")}: {" "}
                         {Number.isFinite(amount)
-                          ? `${amount.toLocaleString()} TZS`
+                          ? `${amount.toLocaleString(locale)} TZS`
                           : "-"}
                       </p>
                     </div>

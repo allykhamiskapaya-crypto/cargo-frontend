@@ -117,7 +117,8 @@ const statusColors = {
 };
 
 function DriverDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   let user = null;
 
@@ -536,7 +537,7 @@ function DriverDashboard() {
 
   const updateAvailability = async () => {
     if (profile?.isRestricted && !profile?.available) {
-      setError("Lipa kamisheni kabla ya kwenda mtandaoni.");
+      setError(t("driver_commission_required_before_online"));
       return;
     }
     if (!profile.available && profile.approvalStatus !== "APPROVED") {
@@ -888,7 +889,7 @@ function DriverDashboard() {
         )}
         {profile?.isRestricted && (
           <div role="alert" className="mb-5 rounded-2xl border border-red-300/30 bg-red-400/[0.09] p-4 text-sm leading-6 text-red-100 shadow-lg shadow-red-950/20">
-            Akaunti yako imezuiwa kupokea kazi mpya kwa sababu umefikisha kikomo cha mizigo 3 iliyokamilika bila kulipa kamisheni. Tafadhali lipa kamisheni ili kufungua akaunti.
+            {t("driver_commission_account_blocked")}
           </div>
         )}
 
@@ -900,12 +901,12 @@ function DriverDashboard() {
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70">{t("driver_commission_wallet")}</p>
-                  <p className="mt-2 text-3xl font-bold text-white">TSh {Number(profile?.commissionBalance || 0).toLocaleString()}</p>
+                  <p className="mt-2 text-3xl font-bold text-white">TSh {Number(profile?.commissionBalance || 0).toLocaleString(locale)}</p>
                   <p className="mt-1 text-sm text-zinc-400">{t("driver_unpaid_jobs", { count: profile?.unpaidJobCount || 0, max: profile?.maxUnpaidJobs || 3 })}</p>
                 </div>
                 <button type="button" disabled={profile?.commissionPaymentPending || ((profile?.commissionBalance || 0) <= 0 && (profile?.unpaidJobCount || 0) <= 0)} onClick={() => setCommissionPaymentOpen((open) => !open)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-300 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
                   <CreditCard size={17} aria-hidden="true" />
-                  {profile?.commissionPaymentPending ? t("driver_commission_pending") : "Lipa Kamisheni"}
+                  {profile?.commissionPaymentPending ? t("driver_commission_pending") : t("driver_pay_commission")}
                 </button>
               </div>
               {profile?.commissionPaymentPending && <p className="mt-4 text-sm text-amber-100">{t("driver_commission_reference_pending", { reference: profile.commissionPaymentReference || "" })}</p>}
@@ -1223,7 +1224,7 @@ function DriverDashboard() {
                   {offers.filter((shipment) => shipment.status === "PENDING").map((shipment) => (
                     <article key={shipment.id} className="flex flex-col justify-between gap-4 rounded-xl border border-white/[0.08] bg-zinc-950/45 p-4 transition hover:border-sky-300/25 sm:flex-row sm:items-center">
                       <div>
-                        <h3 className="font-medium text-white">#{shipment.id}: {shipment.origin} to {shipment.destination}</h3>
+                        <h3 className="font-medium text-white">#{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}</h3>
                         <p className="mt-1 text-sm text-zinc-500">{shipment.cargoType} · {shipment.weightKg} kg</p>
                       </div>
                       <div className="flex gap-2">
@@ -1276,12 +1277,12 @@ function DriverDashboard() {
                               <div>
                                 <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
                                   <MapPin size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
-                                  #{shipment.id}: {shipment.origin} to {shipment.destination}
+                                  #{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}
                                 </h3>
                                 <p className="mt-2 text-sm text-zinc-400">
                                   {shipment.cargoType} · {shipment.weightKg} kg
                                   {shipment.price != null &&
-                                    ` · ${Number(shipment.price).toLocaleString()} TZS`}
+                                    ` · ${Number(shipment.price).toLocaleString(locale)} TZS`}
                                 </p>
                               </div>
                               <span

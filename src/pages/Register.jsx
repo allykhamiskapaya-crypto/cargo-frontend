@@ -81,7 +81,7 @@ function Register() {
             <div className="mb-3 h-28 w-28 overflow-hidden rounded-2xl border border-amber-500/30 bg-zinc-900 shadow-md">
               <img
                 src={bebaLogo}
-                alt="BEBA, kwa usafirishaji wa uhakika na salama"
+                alt={t("brand_logo_alt")}
                 className="h-full w-full object-contain p-1"
               />
             </div>
@@ -211,7 +211,7 @@ function Register() {
                 onChange={handleChange}
                 required
                 className={inputClass}
-                placeholder="John Mkulima"
+                placeholder={t("full_name_placeholder")}
               />
             </div>
 
@@ -226,7 +226,7 @@ function Register() {
                 onChange={handleChange}
                 required
                 className={inputClass}
-                placeholder="mfano@email.com"
+                placeholder={t("email_placeholder")}
               />
             </div>
 
@@ -264,7 +264,7 @@ function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={t(showPassword ? "password_hide" : "password_show")}
                   aria-pressed={showPassword}
                   className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-zinc-400 transition hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500"
                 >

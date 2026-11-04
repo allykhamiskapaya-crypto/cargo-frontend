@@ -32,7 +32,8 @@ function getErrorMessage(error, fallback) {
 }
 
 function Tracking() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   const { shipmentId: pathShipmentId } = useParams();
   const [searchParams] = useSearchParams();
@@ -279,13 +280,13 @@ function Tracking() {
   const submitComplaint = async (event, shipmentId) => {
     event.preventDefault();
     if (!complaintText.trim()) {
-      setComplaintError("Please describe the issue.");
+      setComplaintError(t("tracking_complaint_required"));
       return;
     }
     if (complaintEvidence && !isValidUpload(complaintEvidence, [
       "application/pdf", "image/jpeg", "image/png", "image/webp",
     ])) {
-      setComplaintError("Evidence must be a PDF or supported image, no larger than 1 MB.");
+      setComplaintError(t("tracking_evidence_invalid"));
       return;
     }
     const formData = new FormData();
@@ -307,7 +308,7 @@ function Tracking() {
       setMyComplaints((current) => [response.data, ...current]);
       setComplaintText("");
       setComplaintEvidence(null);
-      setComplaintSuccess("Your complaint was submitted for review.");
+      setComplaintSuccess(t("tracking_complaint_success"));
     } catch (requestError) {
       setComplaintError(getErrorMessage(requestError, t("backend_error")));
     } finally {
@@ -323,10 +324,17 @@ function Tracking() {
         if (isActive) setMyComplaints(Array.isArray(response?.data) ? response.data.filter(Boolean) : []);
       })
       .catch(() => {
-        if (isActive) setComplaintError("Unable to load your complaint history.");
+        if (isActive) setComplaintError(t("tracking_complaint_history_error"));
       });
     return () => { isActive = false; };
-  }, [userId]);
+  }, [t, userId]);
+
+  const getPreviousComplaintStatus = (shipmentId) => {
+    const complaint = myComplaints.find((item) => item.shipmentId === shipmentId);
+    return complaint
+      ? t(`complaint_status_${String(complaint.status).toLowerCase()}`, { defaultValue: complaint.status })
+      : t("tracking_status_unknown");
+  };
 
   if (!user) return null;
 
@@ -421,13 +429,13 @@ function Tracking() {
                         statusColors[s?.status] || "bg-zinc-800 text-zinc-400 border-zinc-700"
                       }`}
                     >
-                      {s?.status || t("tracking_status_unknown")}
+                      {s?.status ? t(`driver_status_${String(s.status).toLowerCase()}`, { defaultValue: s.status }) : t("tracking_status_unknown")}
                     </span>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-400">
                     <span className="inline-flex items-center gap-1.5"><Package size={14} className="text-zinc-500" aria-hidden="true" />{s?.cargoType || "—"}</span>
                     <span>{s?.weightKg ?? "—"} kg</span>
-                    {s?.price != null && <span>{Number(s.price).toLocaleString()} TZS</span>}
+                    {s?.price != null && <span>{Number(s.price).toLocaleString(locale)} TZS</span>}
                   </div>
                   <div className="mt-4 flex flex-wrap justify-end gap-2">
                     {["PENDING", "ASSIGNED"].includes(s?.status) && (
@@ -492,7 +500,7 @@ function Tracking() {
                                 </p>
                                 <p className="mt-1 text-[11px] text-zinc-500">
                                   {historyEntry?.timestamp
-                                    ? new Date(historyEntry.timestamp).toLocaleString()
+                                    ? new Date(historyEntry.timestamp).toLocaleString(locale)
                                     : completed ? t("tracking_status_complete") : t("tracking_status_upcoming")}
                                 </p>
                               </div>
@@ -614,7 +622,7 @@ function Tracking() {
                                 </a>
                               )}
                               {h?.timestamp && <div className="text-zinc-600 text-xs">
-                                {new Date(h.timestamp).toLocaleString()}
+                                {new Date(h.timestamp).toLocaleString(locale)}
                               </div>}
                             </div>
                           </li>
@@ -626,7 +634,7 @@ function Tracking() {
                       onClick={(event) => event.stopPropagation()}
                       onSubmit={(event) => submitComplaint(event, s?.id)}
                     >
-                      <h4 className="text-sm font-semibold text-zinc-300">Report an issue</h4>
+                      <h4 className="text-sm font-semibold text-zinc-300">{t("tracking_report_issue")}</h4>
                       {complaintError && <p role="alert" className="mt-2 text-sm text-red-300">{complaintError}</p>}
                       {complaintSuccess && <p role="status" className="mt-2 text-sm text-emerald-300">{complaintSuccess}</p>}
                       <textarea
@@ -634,11 +642,11 @@ function Tracking() {
                         maxLength={2000}
                         value={complaintText}
                         onChange={(event) => setComplaintText(event.target.value)}
-                        placeholder="Describe the issue with this shipment"
+                        placeholder={t("tracking_complaint_placeholder")}
                         className="mt-3 min-h-24 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
                       />
                       <label className="mt-3 block text-xs text-zinc-400">
-                        Optional evidence (PDF, JPEG, PNG or WebP; max 1 MB)
+                        {t("tracking_evidence_optional")}
                         <input
                           type="file"
                           accept="application/pdf,image/jpeg,image/png,image/webp"
@@ -647,18 +655,18 @@ function Tracking() {
                             setComplaintEvidence(file);
                             setComplaintError(file && !isValidUpload(file, [
                               "application/pdf", "image/jpeg", "image/png", "image/webp",
-                            ]) ? "Evidence must be a PDF or supported image, no larger than 1 MB." : "");
+                            ]) ? t("tracking_evidence_invalid") : "");
                           }}
                           className="mt-2 block w-full text-sm"
                         />
                       </label>
                       <button type="submit" disabled={complaintSubmitting}
                         className="mt-3 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50">
-                        {complaintSubmitting ? "Submitting…" : "Submit complaint"}
+                        {complaintSubmitting ? t("tracking_complaint_submitting") : t("tracking_complaint_submit")}
                       </button>
                       {myComplaints.filter((complaint) => complaint.shipmentId === s?.id).length > 0 && (
                         <p className="mt-3 text-xs text-zinc-400">
-                          Previous complaint: {myComplaints.find((complaint) => complaint.shipmentId === s?.id)?.status || t("tracking_status_unknown")}
+                          {t("tracking_previous_complaint")}: {getPreviousComplaintStatus(s?.id)}
                         </p>
                       )}
                     </form>

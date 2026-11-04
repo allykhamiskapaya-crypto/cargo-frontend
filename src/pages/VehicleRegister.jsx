@@ -147,7 +147,7 @@ function VehicleRegister() {
                 value={formData.plateNumber}
                 onChange={handleChange}
                 required
-                placeholder="T123ABC"
+                placeholder={t("vehicle_plate_placeholder")}
                 className={inputClass}
               />
             </div>
@@ -173,7 +173,7 @@ function VehicleRegister() {
                 value={formData.capacityKg}
                 onChange={handleChange}
                 required
-                placeholder="5000"
+                placeholder={t("vehicle_capacity_placeholder")}
                 className={inputClass}
               />
             </div>

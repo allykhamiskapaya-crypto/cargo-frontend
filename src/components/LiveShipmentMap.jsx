@@ -57,7 +57,8 @@ function FitRouteBounds({ points }) {
 }
 
 function LiveShipmentMap({ shipment }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const [routePoints, setRoutePoints] = useState([]);
   const [driverPosition, setDriverPosition] = useState(null);
   const [routeLoading, setRouteLoading] = useState(true);
@@ -163,7 +164,7 @@ function LiveShipmentMap({ shipment }) {
         aria-label={t("shipment_map_title")}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution={t("map_attribution")}
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {routePoints.length > 1 && (
@@ -183,7 +184,7 @@ function LiveShipmentMap({ shipment }) {
             <Popup>
               {t("shipment_map_driver")}
               {driverPosition.timestamp && (
-                <div>{new Date(driverPosition.timestamp).toLocaleString()}</div>
+                <div>{new Date(driverPosition.timestamp).toLocaleString(locale)}</div>
               )}
             </Popup>
           </Marker>

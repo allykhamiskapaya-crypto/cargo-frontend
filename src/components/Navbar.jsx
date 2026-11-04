@@ -115,12 +115,12 @@ function Navbar({ user }) {
         <Link
           to="/dashboard"
           className="flex min-w-0 items-center gap-3"
-          aria-label="BEBA dashboard"
+          aria-label={t("dashboard_brand_aria")}
           onClick={() => setMenuOpen(false)}
         >
           <img
             src={bebaLogo}
-            alt="BEBA, kwa usafirishaji wa uhakika na salama"
+            alt={t("brand_logo_alt")}
             className="h-11 w-11 shrink-0 rounded-xl bg-white p-0.5 object-contain shadow-lg shadow-black/20"
           />
           <span className="min-w-0">

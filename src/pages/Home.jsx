@@ -33,10 +33,10 @@ function Home() {
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/20 via-zinc-950 to-zinc-950 text-white">
       <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-zinc-950/70 text-white shadow-lg shadow-black/10 backdrop-blur-2xl">
         <nav aria-label={t("primary_navigation")} className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-8">
-          <Link to="/" onClick={closeMenu} className="flex min-w-0 items-center gap-3" aria-label="BEBA home">
+          <Link to="/" onClick={closeMenu} className="flex min-w-0 items-center gap-3" aria-label={t("home_brand_aria")}>
           <img
             src={bebaLogo}
-            alt="BEBA, kwa usafirishaji wa uhakika na salama"
+            alt={t("brand_logo_alt")}
             className="h-11 w-11 shrink-0 rounded-xl bg-white p-0.5 object-contain shadow-lg shadow-black/20"
           />
           <span className="min-w-0">
@@ -184,7 +184,7 @@ function Home() {
       <footer className="border-t border-white/[0.08] bg-zinc-950/70 px-4 py-8 text-center text-sm text-zinc-500 backdrop-blur-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 sm:flex-row">
           <span className="font-semibold tracking-wide text-amber-200/80">BEBA</span>
-          <span>© {new Date().getFullYear()} Mizigo. {t("footer_rights")}</span>
+          <span>© {new Date().getFullYear()} {t("footer_brand_word")}. {t("footer_rights")}</span>
         </div>
       </footer>
     </div>

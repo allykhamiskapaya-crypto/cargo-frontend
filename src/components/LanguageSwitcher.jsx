@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 function LanguageSwitcher({ inline }) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const wrapperClass = inline
     ? "flex gap-2"
@@ -10,7 +10,10 @@ function LanguageSwitcher({ inline }) {
   return (
     <div className={wrapperClass}>
       <button
+        type="button"
         onClick={() => i18n.changeLanguage("sw")}
+        aria-label={t("language_switch_to_swahili")}
+        aria-pressed={i18n.language === "sw"}
         className={`px-3 py-1 rounded-md text-sm font-medium transition ${
           i18n.language === "sw"
             ? "bg-amber-400 text-zinc-950"
@@ -20,7 +23,10 @@ function LanguageSwitcher({ inline }) {
         SW
       </button>
       <button
+        type="button"
         onClick={() => i18n.changeLanguage("en")}
+        aria-label={t("language_switch_to_english")}
+        aria-pressed={i18n.language === "en"}
         className={`px-3 py-1 rounded-md text-sm font-medium transition ${
           i18n.language === "en"
             ? "bg-amber-400 text-zinc-950"

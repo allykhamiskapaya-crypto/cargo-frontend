@@ -58,7 +58,8 @@ async function calculateDrivingDistanceKm(origin, destination, signal) {
 }
 
 function Booking() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -188,7 +189,7 @@ function Booking() {
                     value={formData.origin}
                     onChange={handleChange}
                     required
-                    placeholder="Dar es Salaam or -6.79,39.20"
+                    placeholder={t("booking_origin_placeholder")}
                     className={inputClass}
                   />
                 </label>
@@ -202,7 +203,7 @@ function Booking() {
                     value={formData.destination}
                     onChange={handleChange}
                     required
-                    placeholder="Mwanza or -2.51,32.90"
+                    placeholder={t("booking_destination_placeholder")}
                     className={inputClass}
                   />
                 </label>
@@ -321,7 +322,7 @@ function Booking() {
               <div className="py-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{t("booking_estimated_cost")}</p>
                 <p className="mt-1 text-2xl font-bold tracking-tight text-amber-100">
-                  {quotedPrice == null ? t("booking_estimated_cost_value") : `TSh ${quotedPrice.toLocaleString()}`}
+                  {quotedPrice == null ? t("booking_estimated_cost_value") : `TSh ${quotedPrice.toLocaleString(locale)}`}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{t("booking_estimated_cost_note")}</p>
               </div>

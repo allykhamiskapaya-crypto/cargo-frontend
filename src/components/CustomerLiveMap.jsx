@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { useTranslation } from "react-i18next";
@@ -7,8 +7,12 @@ import { isWithinAllowedServiceArea } from "../utils/serviceArea";
 import "leaflet/dist/leaflet.css";
 
 const darEsSalaamCenter = [-6.7924, 39.2083];
-const nearbyRadiusKm = 15;
 const nearbyRefreshIntervalMs = 10000;
+const highAccuracyLocationOptions = {
+  enableHighAccuracy: true,
+  timeout: 15000,
+  maximumAge: 0,
+};
 const driverMarkerStyles = {
   GARI_KUBWA: { label: "G", color: "#f97316" },
   KIRIKUU: { label: "K", color: "#38bdf8" },
@@ -40,17 +44,25 @@ function distanceKm(first, second) {
   return 6371.0088 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
-function MapFocus({ position }) {
+function MapFocus({ position, driverPositions }) {
   const map = useMap();
 
   useEffect(() => {
     if (position) {
+      if (driverPositions.length > 0) {
+        map.fitBounds(L.latLngBounds([position, ...driverPositions]), {
+          padding: [36, 36],
+          maxZoom: 17,
+        });
+        return;
+      }
+
       map.setView(position, 17);
       return;
     }
 
     map.setView(darEsSalaamCenter, 13);
-  }, [map, position]);
+  }, [driverPositions, map, position]);
 
   return null;
 }
@@ -77,47 +89,71 @@ function CustomerLiveMap() {
   const [positionAccuracy, setPositionAccuracy] = useState(null);
   const [nearbyDrivers, setNearbyDrivers] = useState([]);
   const [nearbyDriversStatus, setNearbyDriversStatus] = useState("loading");
+  const [locationRetryCount, setLocationRetryCount] = useState(0);
   const [locationStatus, setLocationStatus] = useState(() =>
     typeof navigator !== "undefined" && navigator.geolocation ? "locating" : "unsupported",
+  );
+  const driverPositions = useMemo(
+    () => nearbyDrivers.map((driver) => [Number(driver.latitude), Number(driver.longitude)]),
+    [nearbyDrivers],
   );
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return undefined;
     let isActive = true;
+    let watchId = null;
+
+    const updatePosition = ({ coords }) => {
+      const latitude = Number(coords.latitude);
+      const longitude = Number(coords.longitude);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        if (isActive) setLocationStatus("unavailable");
+        return;
+      }
+
+      const accuracy = Number(coords.accuracy);
+      if (isActive) {
+        setPosition([latitude, longitude]);
+        setPositionAccuracy(Number.isFinite(accuracy) ? accuracy : null);
+        setLocationStatus(Number.isFinite(accuracy) && accuracy <= 100 ? "live" : "approximate");
+      }
+    };
+
+    const handleLocationError = (error) => {
+      const status = error.code === 1
+        ? "denied"
+        : error.code === 3
+          ? "timeout"
+          : "unavailable";
+      if (isActive) setLocationStatus(status);
+    };
+
+    const startHighAccuracyWatch = () => {
+      if (!isActive || watchId !== null) return;
+      watchId = navigator.geolocation.watchPosition(
+        updatePosition,
+        handleLocationError,
+        highAccuracyLocationOptions,
+      );
+    };
 
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const latitude = Number(coords.latitude);
-        const longitude = Number(coords.longitude);
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-          if (isActive) setLocationStatus("unavailable");
-          return;
-        }
-
-        const accuracy = Number(coords.accuracy);
-        if (isActive) {
-          setPosition([latitude, longitude]);
-          setPositionAccuracy(Number.isFinite(accuracy) ? accuracy : null);
-          setLocationStatus(Number.isFinite(accuracy) && accuracy <= 100 ? "live" : "approximate");
-        }
+      (currentPosition) => {
+        updatePosition(currentPosition);
+        startHighAccuracyWatch();
       },
       (error) => {
-        const status = error.code === 1
-          ? "denied"
-          : error.code === 3
-            ? "timeout"
-            : "unavailable";
-        if (isActive) setLocationStatus(status);
+        handleLocationError(error);
+        if (error.code !== 1) startHighAccuracyWatch();
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
+      highAccuracyLocationOptions,
     );
 
-    return () => { isActive = false; };
-  }, []);
+    return () => {
+      isActive = false;
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [locationRetryCount]);
 
   useEffect(() => {
     if (!position) return undefined;
@@ -134,7 +170,6 @@ function CustomerLiveMap() {
           params: {
             latitude: position[0],
             longitude: position[1],
-            radiusKm: nearbyRadiusKm,
           },
           signal: controller.signal,
         });
@@ -148,8 +183,7 @@ function CustomerLiveMap() {
             && Number.isFinite(longitude)
             && isWithinAllowedServiceArea(coords)
             && Array.isArray(driver.vehicleTypes)
-            && driver.vehicleTypes.some((type) => Object.hasOwn(driverMarkerStyles, type))
-            && distanceKm(position, coords) <= nearbyRadiusKm;
+            && driver.vehicleTypes.some((type) => Object.hasOwn(driverMarkerStyles, type));
         });
         if (isActive) {
           setNearbyDrivers(drivers);
@@ -182,27 +216,19 @@ function CustomerLiveMap() {
         style={{ height: "100%", minHeight: "400px" }}
         aria-label={t("dashboard_map_title")}
       >
-        <MapFocus position={position} />
+        <MapFocus position={position} driverPositions={driverPositions} />
         <InvalidateMapSize />
         <TileLayer
           attribution={t("map_attribution")}
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {position ? (
+        {position && (
           <CircleMarker
             center={position}
             radius={8}
             pathOptions={{ color: "#111111", weight: 3, fillColor: "#f58b36", fillOpacity: 1 }}
           >
             <Popup>{t("dashboard_location_you")}</Popup>
-          </CircleMarker>
-        ) : (
-          <CircleMarker
-            center={darEsSalaamCenter}
-            radius={8}
-            pathOptions={{ color: "#111111", weight: 3, fillColor: "#f58b36", fillOpacity: 1 }}
-          >
-            <Popup>{t("dashboard_map_city")}</Popup>
           </CircleMarker>
         )}
         {nearbyDrivers.map((driver) => {
@@ -249,13 +275,25 @@ function CustomerLiveMap() {
         </span>
       )}
       {locationStatus !== "live" && locationStatus !== "locating" && (
-        <p role="status" className="absolute bottom-4 left-4 right-4 z-[400] rounded-lg border border-white/10 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-300 shadow-lg">
-          {locationStatus === "approximate"
-            ? t("dashboard_location_approximate_hint", {
-              accuracy: positionAccuracy == null ? "—" : Math.round(positionAccuracy),
-            })
-            : t(`dashboard_location_${locationStatus}_hint`)}
-        </p>
+        <div role="status" className="absolute bottom-4 left-4 right-4 z-[400] flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-300 shadow-lg">
+          <span>
+            {locationStatus === "approximate"
+              ? t("dashboard_location_approximate_hint", {
+                accuracy: positionAccuracy == null ? "—" : Math.round(positionAccuracy),
+              })
+              : t(`dashboard_location_${locationStatus}_hint`)}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setLocationStatus("locating");
+              setLocationRetryCount((count) => count + 1);
+            }}
+            className="shrink-0 rounded-md bg-amber-300 px-2.5 py-1.5 font-semibold text-zinc-950 hover:bg-amber-200"
+          >
+            {t("dashboard_location_retry")}
+          </button>
+        </div>
       )}
     </>
   );

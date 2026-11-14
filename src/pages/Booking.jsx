@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import ServiceTypeSelector from "../components/ServiceTypeSelector";
 import { serviceTypeIds } from "../constants/serviceTypes";
+import { isWithinAllowedServiceArea } from "../utils/serviceArea";
 
 const geocodingCache = new Map();
-const routeDistanceCache = new Map();
 
 async function resolveRoutePoint(location, signal) {
   const normalizedLocation = location.trim().toLowerCase();
@@ -35,26 +35,28 @@ async function resolveRoutePoint(location, signal) {
   return point;
 }
 
-async function calculateDrivingDistanceKm(origin, destination, signal) {
+async function estimateShipment(origin, destination, weightKg, signal) {
   const [originPoint, destinationPoint] = await Promise.all([
     resolveRoutePoint(origin, signal),
     resolveRoutePoint(destination, signal),
   ]);
-  const cacheKey = [...originPoint, ...destinationPoint].join(",");
-  if (routeDistanceCache.has(cacheKey)) return routeDistanceCache.get(cacheKey);
-
-  const coordinates = `${originPoint[1]},${originPoint[0]};${destinationPoint[1]},${destinationPoint[0]}`;
-  const response = await fetch(
-    `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=false`,
-    { signal },
-  );
-  if (!response.ok) throw new Error("Road route lookup failed");
-  const route = (await response.json()).routes?.[0];
-  if (!Number.isFinite(route?.distance) || route.distance < 0) throw new Error("Road route not found");
-
-  const distanceKm = Number((route.distance / 1000).toFixed(2));
-  routeDistanceCache.set(cacheKey, distanceKm);
-  return distanceKm;
+  if (!isWithinAllowedServiceArea(originPoint) || !isWithinAllowedServiceArea(destinationPoint)) {
+    const error = new Error("OUTSIDE_SERVICE_AREA");
+    error.code = "OUTSIDE_SERVICE_AREA";
+    throw error;
+  }
+  const response = await api.post("/shipments/estimate", {
+    pickupLatitude: originPoint[0],
+    pickupLongitude: originPoint[1],
+    dropoffLatitude: destinationPoint[0],
+    dropoffLongitude: destinationPoint[1],
+    weightKg: Number(weightKg),
+  }, { signal });
+  return {
+    ...response.data,
+    pickupCoordinates: originPoint,
+    dropoffCoordinates: destinationPoint,
+  };
 }
 
 function Booking() {
@@ -77,26 +79,44 @@ function Booking() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [routeStatus, setRouteStatus] = useState("idle");
-  const quotedPrice = formData.distanceKm !== ""
-    && Number.isFinite(Number(formData.distanceKm)) && Number(formData.distanceKm) >= 0
-    && Number.isFinite(Number(formData.weightKg)) && Number(formData.weightKg) > 0
-    ? Math.round(5000 + (Number(formData.distanceKm) * Number(formData.weightKg) * 1000))
-    : null;
+  const [estimatedPrice, setEstimatedPrice] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState(null);
 
   useEffect(() => {
     const origin = formData.origin.trim();
     const destination = formData.destination.trim();
-    if (!origin || !destination) return undefined;
+    const weightKg = Number(formData.weightKg);
+    if (!origin || !destination || !Number.isFinite(weightKg) || weightKg <= 0) return undefined;
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       setRouteStatus("calculating");
+      setEstimatedPrice(null);
+      setRouteCoordinates(null);
       try {
-        const distanceKm = await calculateDrivingDistanceKm(origin, destination, controller.signal);
+        const estimate = await estimateShipment(origin, destination, weightKg, controller.signal);
+        const distanceKm = Number(estimate.distanceKm);
+        const price = Number(estimate.estimatedPrice);
+        if (!Number.isFinite(distanceKm) || distanceKm <= 0 || !Number.isFinite(price)) {
+          throw new Error("Invalid shipment estimate");
+        }
         setFormData((current) => ({ ...current, distanceKm: distanceKm.toFixed(2) }));
+        setEstimatedPrice(price);
+        setRouteCoordinates({
+          pickup: estimate.pickupCoordinates,
+          dropoff: estimate.dropoffCoordinates,
+        });
         setRouteStatus("ready");
       } catch (routeError) {
-        if (routeError.name !== "AbortError") setRouteStatus("error");
+        if (routeError.name !== "AbortError" && !controller.signal.aborted) {
+          setFormData((current) => ({ ...current, distanceKm: "" }));
+          setRouteStatus(
+            routeError.code === "OUTSIDE_SERVICE_AREA"
+              || routeError.response?.data?.code === "OUTSIDE_SERVICE_AREA"
+              ? "outside"
+              : "error",
+          );
+        }
       }
     }, 450);
 
@@ -104,7 +124,7 @@ function Booking() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [formData.destination, formData.origin]);
+  }, [formData.destination, formData.origin, formData.weightKg]);
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -112,8 +132,15 @@ function Booking() {
     const { name, value } = event.target;
     if (name === "origin" || name === "destination") {
       setRouteStatus("idle");
+      setEstimatedPrice(null);
+      setRouteCoordinates(null);
       setFormData((current) => ({ ...current, [name]: value, distanceKm: "" }));
       return;
+    }
+    if (name === "weightKg") {
+      setRouteStatus("idle");
+      setEstimatedPrice(null);
+      setRouteCoordinates(null);
     }
     setFormData((current) => ({ ...current, [name]: value }));
   };
@@ -125,7 +152,7 @@ function Booking() {
       setError(t("service_required"));
       return;
     }
-    if (routeStatus !== "ready" || formData.distanceKm === "") {
+    if (routeStatus !== "ready" || !routeCoordinates || formData.distanceKm === "" || Number(formData.distanceKm) <= 0) {
       setError(t("booking_route_error"));
       return;
     }
@@ -139,6 +166,10 @@ function Booking() {
         vehicleType: selectedService,
         weightKg: Number(formData.weightKg),
         distanceKm: Number(formData.distanceKm),
+        pickupLatitude: routeCoordinates.pickup[0],
+        pickupLongitude: routeCoordinates.pickup[1],
+        dropoffLatitude: routeCoordinates.dropoff[0],
+        dropoffLongitude: routeCoordinates.dropoff[1],
       });
       navigate(`/tracking?id=${response.data.id}`);
     } catch {
@@ -241,8 +272,9 @@ function Booking() {
                 <label className="block text-sm font-medium text-zinc-300">
                   <span className="mb-2 block">{t("route_distance_km")}</span>
                   <input type="text" name="distanceKm" readOnly value={formData.distanceKm} placeholder="—" aria-describedby="booking-route-status" className={`${inputClass} cursor-default text-amber-100`} />
-                  <span id="booking-route-status" role="status" aria-live="polite" className={`mt-2 block text-xs ${routeStatus === "error" ? "text-rose-200" : routeStatus === "ready" ? "text-emerald-200" : "text-zinc-500"}`}>
-                    {routeStatus === "calculating" ? t("booking_route_calculating")
+                  <span id="booking-route-status" role={routeStatus === "outside" ? "alert" : "status"} aria-live="polite" className={`mt-2 block text-xs ${routeStatus === "error" || routeStatus === "outside" ? "text-rose-200" : routeStatus === "ready" ? "text-emerald-200" : "text-zinc-500"}`}>
+                    {routeStatus === "outside" ? t("booking_service_area_restriction")
+                      : routeStatus === "calculating" ? t("booking_route_calculating")
                       : routeStatus === "ready" ? t("booking_route_ready")
                         : routeStatus === "error" ? t("booking_route_error")
                           : formData.origin.trim() && formData.destination.trim() ? t("booking_route_waiting") : t("booking_route_hint")}
@@ -322,14 +354,14 @@ function Booking() {
               <div className="py-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{t("booking_estimated_cost")}</p>
                 <p className="mt-1 text-2xl font-bold tracking-tight text-amber-100">
-                  {quotedPrice == null ? t("booking_estimated_cost_value") : `TSh ${quotedPrice.toLocaleString(locale)}`}
+                  {estimatedPrice == null ? t("booking_estimated_cost_value") : `TSh ${estimatedPrice.toLocaleString(locale)}`}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{t("booking_estimated_cost_note")}</p>
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !selectedService || routeStatus !== "ready"}
+                disabled={loading || !selectedService || routeStatus !== "ready" || !routeCoordinates}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-400/10 transition hover:-translate-y-0.5 hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? t("booking_loading") : t("booking_submit")}

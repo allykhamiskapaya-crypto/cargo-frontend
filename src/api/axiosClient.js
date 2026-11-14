@@ -11,6 +11,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   const isPublicAuthRequest =
+
     config.url === "/auth/login" ||
     (config.url === "/users" && config.method?.toLowerCase() === "post");
   if (token && !isPublicAuthRequest) {

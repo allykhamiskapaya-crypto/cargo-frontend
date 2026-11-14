@@ -1,13 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { serviceTypes } from "../constants/serviceTypes";
 
-function ServiceTypeSelector({ selectedService, onChange }) {
-  const { t } = useTranslation();
+function ServiceTypeSelector({ selectedService, onChange, prices }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="group" aria-label={t("service_type")}>
       {serviceTypes.map(({ id, label, description, Icon, color, background }) => {
         const selected = selectedService === id;
+        const price = prices?.[id];
 
         return (
           <button
@@ -27,7 +29,18 @@ function ServiceTypeSelector({ selectedService, onChange }) {
             <span className="min-w-0">
               <span className="block text-sm font-semibold">{t(label)}</span>
               <span className="mt-1 block text-xs leading-5 text-zinc-500">{t(description)}</span>
-              <span className="mt-2 block text-[11px] font-medium text-amber-200/80">{t("booking_vehicle_fare_hint")}</span>
+              {prices && (
+                <span className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-2.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                    {t("booking_vehicle_estimated_fare")}
+                  </span>
+                  <span className={`text-base font-extrabold tabular-nums leading-6 ${price == null ? "text-zinc-400" : "text-amber-300"}`}>
+                    {price == null
+                      ? t("booking_vehicle_fare_pending")
+                      : `TZS ${Number(price).toLocaleString(locale)}`}
+                  </span>
+                </span>
+              )}
             </span>
             {selected && <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_12px_rgb(252_211_77/70%)]" />}
           </button>

@@ -323,34 +323,48 @@ function DriverDashboard() {
     .join(",");
 
   useEffect(() => {
-    if (!inTransitShipmentIds) return undefined;
-    if (!hasGeolocation) return undefined;
+    if (!hasGeolocation || (!profile?.available && !inTransitShipmentIds)) return undefined;
 
     let lastSentAt = 0;
+    let inFlight = false;
+    let isActive = true;
     const shipmentIds = inTransitShipmentIds.split(",");
     const watchId = navigator.geolocation.watchPosition(
       async (position) => {
         const currentTime = Date.now();
-        if (currentTime - lastSentAt < 15000) return;
+        if (currentTime - lastSentAt < 15000 || inFlight) return;
         lastSentAt = currentTime;
+        inFlight = true;
+        const coordinates = {
+          latitude: Number(position.coords.latitude.toFixed(7)),
+          longitude: Number(position.coords.longitude.toFixed(7)),
+        };
         try {
-          await Promise.all(shipmentIds.map((shipmentId) => api.post(
-            `/shipments/${shipmentId}/location`,
-            {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            },
-          )));
+          const locationUpdates = [];
+          if (profile?.available) {
+            locationUpdates.push(api.post("/drivers/me/location", coordinates));
+          }
+          locationUpdates.push(...shipmentIds
+            .filter(Boolean)
+            .map((shipmentId) => api.post(`/shipments/${shipmentId}/location`, coordinates)));
+          await Promise.all(locationUpdates);
         } catch {
-          setError(t("backend_error"));
+          if (isActive) setError(t("backend_error"));
+        } finally {
+          inFlight = false;
         }
       },
-      () => setError(t("driver_gps_denied")),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
+      () => {
+        if (isActive) setError(t("driver_gps_denied"));
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
 
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [hasGeolocation, inTransitShipmentIds, simulation?.shipmentId, t]);
+    return () => {
+      isActive = false;
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [hasGeolocation, inTransitShipmentIds, profile?.available, t]);
 
   useEffect(() => {
     if (!simulation) return undefined;

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, MapPin, Package, Route, Truck, Weight } from "lucide-react";
+import { ArrowRight, Check, MapPin, Package, Route, Truck } from "lucide-react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
+import CustomerLiveMap from "../components/CustomerLiveMap";
 import ServiceTypeSelector from "../components/ServiceTypeSelector";
 import { serviceTypeIds } from "../constants/serviceTypes";
 import { isWithinAllowedServiceArea } from "../utils/serviceArea";
@@ -35,7 +36,7 @@ async function resolveRoutePoint(location, signal) {
   return point;
 }
 
-async function estimateShipment(origin, destination, weightKg, signal) {
+async function estimateShipment(origin, destination, signal) {
   const [originPoint, destinationPoint] = await Promise.all([
     resolveRoutePoint(origin, signal),
     resolveRoutePoint(destination, signal),
@@ -50,7 +51,6 @@ async function estimateShipment(origin, destination, weightKg, signal) {
     pickupLongitude: originPoint[1],
     dropoffLatitude: destinationPoint[0],
     dropoffLongitude: destinationPoint[1],
-    weightKg: Number(weightKg),
   }, { signal });
   return {
     ...response.data,
@@ -73,35 +73,36 @@ function Booking() {
     origin: "",
     destination: searchParams.get("destination") || "",
     cargoType: "",
-    weightKg: "1",
     distanceKm: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [routeStatus, setRouteStatus] = useState("idle");
-  const [estimatedPrice, setEstimatedPrice] = useState(null);
+  const [estimatedPrices, setEstimatedPrices] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState(null);
 
   useEffect(() => {
     const origin = formData.origin.trim();
     const destination = formData.destination.trim();
-    const weightKg = Number(formData.weightKg);
-    if (!origin || !destination || !Number.isFinite(weightKg) || weightKg <= 0) return undefined;
+    if (!origin || !destination) return undefined;
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       setRouteStatus("calculating");
-      setEstimatedPrice(null);
+      setEstimatedPrices(null);
       setRouteCoordinates(null);
       try {
-        const estimate = await estimateShipment(origin, destination, weightKg, controller.signal);
+        const estimate = await estimateShipment(origin, destination, controller.signal);
         const distanceKm = Number(estimate.distanceKm);
-        const price = Number(estimate.estimatedPrice);
-        if (!Number.isFinite(distanceKm) || distanceKm <= 0 || !Number.isFinite(price)) {
+        const prices = estimate.pricesByVehicleType;
+        const pricesAreValid = prices && serviceTypeIds.every(
+          (serviceId) => Number.isFinite(Number(prices[serviceId])),
+        );
+        if (!Number.isFinite(distanceKm) || distanceKm <= 0 || !pricesAreValid) {
           throw new Error("Invalid shipment estimate");
         }
         setFormData((current) => ({ ...current, distanceKm: distanceKm.toFixed(2) }));
-        setEstimatedPrice(price);
+        setEstimatedPrices(prices);
         setRouteCoordinates({
           pickup: estimate.pickupCoordinates,
           dropoff: estimate.dropoffCoordinates,
@@ -124,7 +125,7 @@ function Booking() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [formData.destination, formData.origin, formData.weightKg]);
+  }, [formData.destination, formData.origin]);
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -132,15 +133,10 @@ function Booking() {
     const { name, value } = event.target;
     if (name === "origin" || name === "destination") {
       setRouteStatus("idle");
-      setEstimatedPrice(null);
+      setEstimatedPrices(null);
       setRouteCoordinates(null);
       setFormData((current) => ({ ...current, [name]: value, distanceKm: "" }));
       return;
-    }
-    if (name === "weightKg") {
-      setRouteStatus("idle");
-      setEstimatedPrice(null);
-      setRouteCoordinates(null);
     }
     setFormData((current) => ({ ...current, [name]: value }));
   };
@@ -164,7 +160,6 @@ function Booking() {
         destination: formData.destination,
         cargoType: formData.cargoType.trim(),
         vehicleType: selectedService,
-        weightKg: Number(formData.weightKg),
         distanceKm: Number(formData.distanceKm),
         pickupLatitude: routeCoordinates.pickup[0],
         pickupLongitude: routeCoordinates.pickup[1],
@@ -178,6 +173,8 @@ function Booking() {
       setLoading(false);
     }
   };
+
+  const selectedPrice = selectedService ? estimatedPrices?.[selectedService] : null;
 
   const inputClass = "w-full rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-300/15";
 
@@ -196,6 +193,16 @@ function Booking() {
             {error}
           </div>
         )}
+
+        <section className="mb-5 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/60 shadow-xl shadow-black/10 backdrop-blur-xl">
+          <div className="border-b border-white/[0.08] px-5 py-4 sm:px-7">
+            <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
+            <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
+          </div>
+          <div className="relative min-h-[400px]">
+            <CustomerLiveMap />
+          </div>
+        </section>
 
         <form onSubmit={handleSubmit} className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="space-y-5">
@@ -264,11 +271,7 @@ function Booking() {
                   className={inputClass}
                 />
               </label>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm font-medium text-zinc-300">
-                  <span className="mb-2 flex items-center gap-2"><Weight size={14} aria-hidden="true" />{t("weight_kg")}</span>
-                  <input type="number" name="weightKg" min="0.01" step="0.01" required value={formData.weightKg} onChange={handleChange} className={inputClass} />
-                </label>
+              <div className="mt-4">
                 <label className="block text-sm font-medium text-zinc-300">
                   <span className="mb-2 block">{t("route_distance_km")}</span>
                   <input type="text" name="distanceKm" readOnly value={formData.distanceKm} placeholder="—" aria-describedby="booking-route-status" className={`${inputClass} cursor-default text-amber-100`} />
@@ -293,7 +296,7 @@ function Booking() {
                   <p className="mt-1 text-sm text-zinc-500">{t("booking_vehicle_section_hint")}</p>
                 </div>
               </div>
-              <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} />
+              <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} prices={estimatedPrices || {}} />
               {selectedService && (
                 <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber-300/15 bg-amber-300/[0.05] px-3 py-1.5 text-xs text-zinc-300">
                   <Check size={14} className="text-amber-200" aria-hidden="true" />
@@ -342,10 +345,6 @@ function Booking() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-zinc-400">{t("weight_kg")}</span>
-                  <span className="font-medium text-zinc-100">{formData.weightKg || "—"} kg</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
                   <span className="text-zinc-400">{t("route_distance_km")}</span>
                   <span className="font-medium text-zinc-100">{formData.distanceKm ? `${formData.distanceKm} km` : "—"}</span>
                 </div>
@@ -354,7 +353,7 @@ function Booking() {
               <div className="py-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{t("booking_estimated_cost")}</p>
                 <p className="mt-1 text-2xl font-bold tracking-tight text-amber-100">
-                  {estimatedPrice == null ? t("booking_estimated_cost_value") : `TSh ${estimatedPrice.toLocaleString(locale)}`}
+                  {selectedPrice == null ? t("booking_estimated_cost_value") : `TZS ${Number(selectedPrice).toLocaleString(locale)}`}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{t("booking_estimated_cost_note")}</p>
               </div>

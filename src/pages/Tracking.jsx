@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Check, Clock3, Copy, MessageCircle, Navigation, Package, Phone, Truck } from "lucide-react";
 import api from "../api/axiosClient";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 import { isValidUpload } from "../utils/uploadValidation";
 
 const LiveShipmentMap = lazy(() => import("../components/LiveShipmentMap"));
@@ -93,11 +94,10 @@ function Tracking() {
       }
     };
 
-    loadShipments(true);
-    const refreshInterval = window.setInterval(() => loadShipments(), 15000);
+    const stopPolling = startVisibleInterval(() => loadShipments(true), 15000);
     return () => {
       isActive = false;
-      window.clearInterval(refreshInterval);
+      stopPolling();
     };
   }, [navigate, t, userId]);
 
@@ -129,11 +129,10 @@ function Tracking() {
         setShipmentDetailFailure({ shipmentId: activeShipmentId, message });
       }
     };
-    loadShipmentDetail();
-    const refreshInterval = window.setInterval(loadShipmentDetail, 15000);
+    const stopPolling = startVisibleInterval(loadShipmentDetail, 15000);
     return () => {
       isActive = false;
-      window.clearInterval(refreshInterval);
+      stopPolling();
     };
   }, [activeShipmentId, t]);
 

@@ -3,8 +3,9 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
-import bebaLogo from "../assets/beba_logo.png";
+import bebaLogo from "../assets/beba_logo.jpeg";
 import api from "../api/axiosClient";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 
 function Navbar({ user }) {
   const { t } = useTranslation();
@@ -33,11 +34,10 @@ function Navbar({ user }) {
         if (active) setOffers([]);
       }
     };
-    refreshOffers();
-    const interval = window.setInterval(refreshOffers, 5000);
+    const stopPolling = startVisibleInterval(refreshOffers, 15000);
     return () => {
       active = false;
-      window.clearInterval(interval);
+      stopPolling();
     };
   }, [role, user?.id]);
 

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import { isWithinAllowedServiceArea } from "../utils/serviceArea";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 import "leaflet/dist/leaflet.css";
 
 const darEsSalaamCenter = [-6.7924, 39.2083];
@@ -97,6 +98,12 @@ function CustomerLiveMap() {
     () => nearbyDrivers.map((driver) => [Number(driver.latitude), Number(driver.longitude)]),
     [nearbyDrivers],
   );
+  const hasPosition = Boolean(position);
+  const positionRef = useRef(position);
+
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return undefined;
@@ -129,12 +136,21 @@ function CustomerLiveMap() {
     };
 
     const startHighAccuracyWatch = () => {
-      if (!isActive || watchId !== null) return;
+      if (!isActive || document.hidden || watchId !== null) return;
       watchId = navigator.geolocation.watchPosition(
         updatePosition,
         handleLocationError,
         highAccuracyLocationOptions,
       );
+    };
+    const stopHighAccuracyWatch = () => {
+      if (watchId === null) return;
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopHighAccuracyWatch();
+      else startHighAccuracyWatch();
     };
 
     navigator.geolocation.getCurrentPosition(
@@ -148,28 +164,29 @@ function CustomerLiveMap() {
       },
       highAccuracyLocationOptions,
     );
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isActive = false;
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      stopHighAccuracyWatch();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [locationRetryCount]);
 
   useEffect(() => {
-    if (!position) return undefined;
+    if (!hasPosition) return undefined;
 
     let isActive = true;
-    let inFlight = false;
     const controller = new AbortController();
     const loadNearbyDrivers = async () => {
-      if (inFlight) return;
-      inFlight = true;
+      const currentPosition = positionRef.current;
+      if (!currentPosition) return;
       setNearbyDriversStatus((status) => status === "ready" ? status : "loading");
       try {
         const response = await api.get("/drivers/nearby", {
           params: {
-            latitude: position[0],
-            longitude: position[1],
+            latitude: currentPosition[0],
+            longitude: currentPosition[1],
           },
           signal: controller.signal,
         });
@@ -191,19 +208,16 @@ function CustomerLiveMap() {
         }
       } catch {
         if (isActive && !controller.signal.aborted) setNearbyDriversStatus("error");
-      } finally {
-        inFlight = false;
       }
     };
 
-    loadNearbyDrivers();
-    const intervalId = window.setInterval(loadNearbyDrivers, nearbyRefreshIntervalMs);
+    const stopPolling = startVisibleInterval(loadNearbyDrivers, nearbyRefreshIntervalMs);
     return () => {
       isActive = false;
       controller.abort();
-      window.clearInterval(intervalId);
+      stopPolling();
     };
-  }, [position]);
+  }, [hasPosition]);
 
   return (
     <>

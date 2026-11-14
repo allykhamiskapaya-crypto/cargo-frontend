@@ -3,6 +3,7 @@ import L from "leaflet";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 import "leaflet/dist/leaflet.css";
 
 const defaultCenter = [-6.8, 39.2];
@@ -127,11 +128,10 @@ function LiveShipmentMap({ shipment }) {
       }
     };
 
-    loadPosition();
-    const intervalId = window.setInterval(loadPosition, 3000);
+    const stopPolling = startVisibleInterval(loadPosition, 10000);
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
+      stopPolling();
     };
   }, [isTrackingDriver, shipmentId]);
 

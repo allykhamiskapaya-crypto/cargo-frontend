@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
-import bebaLogo from "../assets/beba_logo.png";
+import bebaLogo from "../assets/beba_logo.jpeg";
 
 function Register() {
   const { t } = useTranslation();

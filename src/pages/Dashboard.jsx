@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import ServiceTypeSelector from "../components/ServiceTypeSelector";
 import CustomerLiveMap from "../components/CustomerLiveMap";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 
 const notificationReadKey = (userId) => `beba.customer.shipment-updates-read.${userId}`;
 
@@ -60,11 +61,10 @@ function Dashboard() {
       }
     };
 
-    loadShipments();
-    const refreshInterval = window.setInterval(loadShipments, 5000);
+    const stopPolling = startVisibleInterval(loadShipments, 15000);
     return () => {
       isActive = false;
-      window.clearInterval(refreshInterval);
+      stopPolling();
     };
   }, [retryCount, user?.id, role]);
 

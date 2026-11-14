@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, Bell, CheckCircle2, Clock3, CreditCard, Mail, MapPin, MessageCircle, Navigation, Package, Phone, Route, Truck, UserRound, Wifi, X } from "lucide-react";
 import api from "../api/axiosClient";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 import VehicleTypeSelector from "../components/VehicleTypeSelector";
 import { isValidUpload } from "../utils/uploadValidation";
 
@@ -257,10 +258,10 @@ function DriverDashboard() {
         // Keep the last known assignments visible during transient refresh failures.
       }
     };
-    const intervalId = window.setInterval(refreshDriverShipments, 10000);
+    const stopPolling = startVisibleInterval(refreshDriverShipments, 15000, false);
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
+      stopPolling();
     };
   }, [userId, userRole]);
 
@@ -284,11 +285,10 @@ function DriverDashboard() {
       }
     };
 
-    refreshOffers();
-    const intervalId = window.setInterval(refreshOffers, 5000);
+    const stopPolling = startVisibleInterval(refreshOffers, 10000);
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
+      stopPolling();
     };
   }, [profile?.available, profile?.isRestricted, t]);
 
@@ -303,10 +303,10 @@ function DriverDashboard() {
         if (isActive) setError(t("backend_error"));
       }
     };
-    const intervalId = window.setInterval(refreshProfile, 10000);
+    const stopPolling = startVisibleInterval(refreshProfile, 30000, false);
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
+      stopPolling();
     };
   }, [t, userId]);
 
@@ -328,9 +328,13 @@ function DriverDashboard() {
     let lastSentAt = 0;
     let inFlight = false;
     let isActive = true;
+    let watchId = null;
     const shipmentIds = inTransitShipmentIds.split(",");
-    const watchId = navigator.geolocation.watchPosition(
+    const startLocationWatch = () => {
+      if (document.hidden || watchId !== null) return;
+      watchId = navigator.geolocation.watchPosition(
       async (position) => {
+        if (document.hidden) return;
         const currentTime = Date.now();
         if (currentTime - lastSentAt < 15000 || inFlight) return;
         lastSentAt = currentTime;
@@ -358,11 +362,24 @@ function DriverDashboard() {
         if (isActive) setError(t("driver_gps_denied"));
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
+      );
+    };
+    const stopLocationWatch = () => {
+      if (watchId === null) return;
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    };
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopLocationWatch();
+      else startLocationWatch();
+    };
+    startLocationWatch();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isActive = false;
-      navigator.geolocation.clearWatch(watchId);
+      stopLocationWatch();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [hasGeolocation, inTransitShipmentIds, profile?.available, t]);
 
@@ -373,7 +390,7 @@ function DriverDashboard() {
     let nextIndex = 0;
     let timeoutId;
     const sendNextCoordinate = async () => {
-      if (!isActive || inFlight) return;
+      if (!isActive || document.hidden || inFlight) return;
       inFlight = true;
       const point = simulation.path[nextIndex];
       const coordinates = getValidCoordinates(point?.latitude, point?.longitude)
@@ -419,13 +436,21 @@ function DriverDashboard() {
       } finally {
         inFlight = false;
       }
-      if (isActive) timeoutId = window.setTimeout(sendNextCoordinate, SIMULATION_INTERVAL_MS);
+      if (isActive && !document.hidden) {
+        timeoutId = window.setTimeout(sendNextCoordinate, SIMULATION_INTERVAL_MS);
+      }
     };
 
-    sendNextCoordinate();
+    const handleVisibilityChange = () => {
+      if (document.hidden) window.clearTimeout(timeoutId);
+      else sendNextCoordinate();
+    };
+    if (!document.hidden) sendNextCoordinate();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       isActive = false;
       window.clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [simulation, t]);
 

@@ -3,6 +3,7 @@ import { ArrowRight, CircleDollarSign, MapPin, Package, Route, Truck } from "luc
 import { Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 
 const statuses = ["ALL", "PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "CANCELLED"];
 const statusStyles = {
@@ -50,11 +51,10 @@ function MyShipments() {
         if (active) setLoading(false);
       }
     };
-    loadShipments();
-    const interval = window.setInterval(loadShipments, 15000);
+    const stopPolling = startVisibleInterval(loadShipments, 15000);
     return () => {
       active = false;
-      window.clearInterval(interval);
+      stopPolling();
     };
   }, [user?.id]);
 

@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, X } from "lucide-react";
 import LanguageSwitcher from "../components/LanguageSwitcher";
-import bebaLogo from "../assets/beba_logo.png";
-import cargoTruck from "../assets/cargo-truck-highway.jpg";
+import bebaLogo from "../assets/beba_logo.jpeg";
+import optimizedCargoTruck from "../assets/cargo-truck-highway-optimized.jpg";
+import { startVisibleInterval } from "../utils/startVisibleInterval";
 
 const heroImages = [
-  cargoTruck,
-  "https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=2400&q=85",
-  "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2400&q=85",
+  optimizedCargoTruck,
+  "https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=1400&q=75",
+  "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=75",
 ];
 
 function Home() {
@@ -20,11 +21,11 @@ function Home() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
 
-    const intervalId = window.setInterval(() => {
+    const stopCarousel = startVisibleInterval(() => {
       setActiveImage((currentImage) => (currentImage + 1) % heroImages.length);
-    }, 6500);
+    }, 6500, false);
 
-    return () => window.clearInterval(intervalId);
+    return stopCarousel;
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
@@ -100,17 +101,14 @@ function Home() {
 
       <section className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-neutral-950 px-4 py-20 sm:px-8 sm:py-24 lg:px-12">
         <div className="absolute inset-0 -z-20">
-          {heroImages.map((image, index) => (
-            <img
-              key={image}
-              src={image}
-              alt=""
-              aria-hidden="true"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out motion-reduce:transition-none ${
-                activeImage === index ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          ))}
+          <img
+            key={activeImage}
+            src={heroImages[activeImage]}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="hero-image absolute inset-0 h-full w-full object-cover"
+          />
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-neutral-950 via-neutral-950/80 to-neutral-950/45" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_70%_40%,_transparent_0%,_rgba(8,9,10,0.18)_55%,_rgba(8,9,10,0.75)_100%)]" />

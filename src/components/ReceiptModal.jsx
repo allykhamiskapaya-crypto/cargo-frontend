@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { ArrowLeft, Check, Download, LayoutDashboard, Mail, MapPin, Package, Phone, Printer, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import bebaLogo from "../assets/beba_logo.png";
+import bebaLogo from "../assets/beba_logo.jpeg";
 import "./Receipt.css";
 
 const BASE_FARE = 5000;

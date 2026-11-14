@@ -8,6 +8,7 @@ import Tracking from "./pages/Tracking";
 import MyShipments from "./pages/MyShipments";
 import VehicleRegister from "./pages/VehicleRegister";
 import Payment from "./pages/Payment";
+import Receipt from "./pages/Receipt";
 import DriverDashboard from "./pages/DriverDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthenticatedLayout from "./components/AuthenticatedLayout";
@@ -27,6 +28,7 @@ function App() {
           <Route path="/shipments" element={<MyShipments />} />
           <Route path="/vehicle" element={<VehicleRegister />} />
           <Route path="/payment" element={<Payment />} />
+          <Route path="/receipt/:shipmentId" element={<Receipt />} />
           <Route path="/driver-dashboard" element={<DriverDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
         </Route>

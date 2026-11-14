@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
@@ -13,6 +13,13 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const backendOrigin = new URL(
+      import.meta.env.VITE_API_URL || "http://localhost:8080",
+    ).origin;
+    fetch(backendOrigin, { mode: "no-cors" }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,16 +118,19 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
               className="w-full rounded-lg bg-amber-400 py-2 font-semibold text-zinc-950 transition hover:bg-amber-500 disabled:opacity-50"
             >
-              {loading ? t("logging_in") : t("login_button")}
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950"
+                  />
+                  {t("logging_in")}
+                </span>
+              ) : t("login_button")}
             </button>
-            {loading && (
-              <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-center text-sm text-amber-200">
-                <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-amber-200/30 border-t-amber-200" />
-                {t("login_connecting")}
-              </p>
-            )}
           </form>
 
           <p className="text-zinc-500 text-sm text-center mt-3">

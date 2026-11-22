@@ -137,17 +137,17 @@ function LiveShipmentMap({ shipment }) {
 
   return (
     <section className="overflow-hidden rounded-lg border border-amber-400/25 bg-neutral-950" aria-label={t("shipment_map_title")}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
-        <div>
+      <div className="flex flex-col items-start justify-between gap-2 border-b border-white/10 px-3 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4">
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-white">{t("shipment_map_title")}</h3>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1 break-words text-xs leading-5 text-zinc-400 [overflow-wrap:anywhere]">
             <span className="text-amber-300">{t("shipment_map_origin")}</span> {shipment.origin}
             <span className="mx-2 text-zinc-600">{t("shipment_map_to")}</span>
             <span className="text-amber-300">{t("shipment_map_destination")}</span> {shipment.destination}
           </p>
         </div>
         {isTrackingDriver && (
-          <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-medium text-amber-200">
+          <span className="max-w-full rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-center text-xs font-medium leading-5 text-amber-200">
             {driverPosition ? t("shipment_map_live") : t("shipment_map_waiting")}
           </span>
         )}
@@ -160,7 +160,7 @@ function LiveShipmentMap({ shipment }) {
         center={defaultCenter}
         zoom={6}
         scrollWheelZoom={false}
-        className="z-0 h-[320px] w-full bg-neutral-900 sm:h-[380px]"
+        className="z-0 h-[280px] w-full bg-neutral-900 sm:h-[380px]"
         aria-label={t("shipment_map_title")}
       >
         <TileLayer

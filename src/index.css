@@ -2,11 +2,13 @@
 
 html {
   min-height: 100%;
+  overflow-x: clip;
   background: #08090a;
 }
 
 body {
   min-height: 100vh;
+  overflow-x: clip;
   margin: 0;
   background: #08090a;
   isolation: isolate;
@@ -93,6 +95,7 @@ body:has(.auth-static)::before {
 
 #root {
   min-height: 100vh;
+  min-width: 0;
 }
 
 @media (max-width: 640px) {

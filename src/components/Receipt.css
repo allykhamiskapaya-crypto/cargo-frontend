@@ -398,17 +398,29 @@
 
   .receipt-actions {
     align-items: stretch;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
   }
 
   .receipt-action-group {
+    display: grid;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
   .receipt-action {
-    min-height: 40px;
+    min-width: 0;
+    min-height: 44px;
+    flex: 1 1 calc(50% - 4px);
     gap: 6px;
     padding: 8px 9px;
     font-size: 11px;
+  }
+
+  .receipt-action-group .receipt-action {
+    width: 100%;
   }
 
   .receipt-paper {
@@ -416,7 +428,18 @@
   }
 
   .receipt-head {
+    flex-wrap: wrap;
     gap: 12px;
+  }
+
+  .receipt-title-block {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .receipt-reference,
+  .receipt-title-block h1 {
+    overflow-wrap: anywhere;
   }
 
   .receipt-brand {

@@ -773,7 +773,7 @@ function DriverDashboard() {
     "w-full rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-2.5 text-white placeholder-zinc-500 transition focus:border-amber-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400/20";
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/25 via-zinc-950 to-zinc-950 text-white">
+    <div className="relative min-h-screen min-w-0 overflow-x-clip bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/25 via-zinc-950 to-zinc-950 text-white">
       <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <header className="mb-8 flex flex-col justify-between gap-5 rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:flex-row sm:items-center sm:gap-6 sm:p-8">
           <div className="flex min-w-0 items-center gap-4">
@@ -788,7 +788,7 @@ function DriverDashboard() {
               <p className="mt-1 text-sm text-zinc-400">{t("driver_dashboard_subtitle")}</p>
             </div>
           </div>
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3 sm:justify-end">
             <button
               type="button"
               aria-label={t("driver_notifications_button", { count: unreadOffersCount })}
@@ -806,7 +806,7 @@ function DriverDashboard() {
                 </span>
               )}
             </button>
-            <span className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3.5 py-2 text-center text-sm font-semibold leading-5 ${
+            <span className={`inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border px-3 py-2 text-center text-xs font-semibold leading-5 sm:px-3.5 sm:text-sm ${
               profile?.available
                 ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
                 : "border-zinc-700 bg-zinc-900/80 text-zinc-300"
@@ -818,7 +818,7 @@ function DriverDashboard() {
               type="button"
               onClick={updateAvailability}
               disabled={updatingAvailability || (!profile?.available && profile?.approvalStatus !== "APPROVED")}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-center text-xs font-bold leading-5 transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm ${
                 profile?.available
                   ? "border border-amber-400/30 bg-amber-400/5 text-amber-200 hover:bg-amber-400/10"
                   : "bg-amber-300 text-zinc-950 shadow-lg shadow-amber-400/10 hover:bg-amber-200"
@@ -898,7 +898,7 @@ function DriverDashboard() {
               type="button"
               aria-label={t("driver_dismiss_notification")}
               onClick={() => setNewOrderNotification(null)}
-              className="rounded-lg p-1 text-amber-100/70 transition hover:bg-white/10 hover:text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-amber-100/70 transition hover:bg-white/10 hover:text-white"
             >
               <X size={17} aria-hidden="true" />
             </button>
@@ -932,12 +932,12 @@ function DriverDashboard() {
           <>
             <section className="mb-6 rounded-2xl border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.11] via-zinc-950/75 to-emerald-300/[0.04] p-5 shadow-xl shadow-black/15 backdrop-blur-xl sm:p-6">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70">{t("driver_commission_wallet")}</p>
-                  <p className="mt-2 text-3xl font-bold text-white">TSh {Number(profile?.commissionBalance || 0).toLocaleString(locale)}</p>
+                <div className="min-w-0">
+                  <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70">{t("driver_commission_wallet")}</p>
+                  <p className="mt-2 break-words text-2xl font-bold text-white [overflow-wrap:anywhere] sm:text-3xl">TSh {Number(profile?.commissionBalance || 0).toLocaleString(locale)}</p>
                   <p className="mt-1 text-sm text-zinc-400">{t("driver_unpaid_jobs", { count: profile?.unpaidJobCount || 0, max: profile?.maxUnpaidJobs || 3 })}</p>
                 </div>
-                <button type="button" disabled={profile?.commissionPaymentPending || ((profile?.commissionBalance || 0) <= 0 && (profile?.unpaidJobCount || 0) <= 0)} onClick={() => setCommissionPaymentOpen((open) => !open)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-300 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" disabled={profile?.commissionPaymentPending || ((profile?.commissionBalance || 0) <= 0 && (profile?.unpaidJobCount || 0) <= 0)} onClick={() => setCommissionPaymentOpen((open) => !open)} className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-300 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                   <CreditCard size={17} aria-hidden="true" />
                   {profile?.commissionPaymentPending ? t("driver_commission_pending") : t("driver_pay_commission")}
                 </button>
@@ -949,23 +949,23 @@ function DriverDashboard() {
                     <span className="mb-2 block">{t("driver_transaction_reference")}</span>
                     <input required maxLength={80} value={commissionReference} onChange={(event) => setCommissionReference(event.target.value)} placeholder={t("driver_transaction_reference_placeholder")} className={inputClass} />
                   </label>
-                  <button type="submit" disabled={submittingCommission || !commissionReference.trim()} className="self-end rounded-xl bg-emerald-300 px-5 py-3 text-sm font-bold text-zinc-950 disabled:opacity-50">{submittingCommission ? t("driver_updating") : t("driver_submit_payment_reference")}</button>
+                  <button type="submit" disabled={submittingCommission || !commissionReference.trim()} className="min-h-11 w-full self-end rounded-xl bg-emerald-300 px-5 py-3 text-sm font-bold text-zinc-950 disabled:opacity-50 sm:w-auto">{submittingCommission ? t("driver_updating") : t("driver_submit_payment_reference")}</button>
                   <p className="text-xs text-zinc-500 sm:col-span-2">{t("driver_commission_verification_note")}</p>
                 </form>
               )}
             </section>
-            <section className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label={t("driver_dashboard_title")}>
+            <section className="mb-8 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-4" aria-label={t("driver_dashboard_title")}>
               {summary.map((item, index) => {
                 const MetricIcon = [Package, Clock3, Truck, CheckCircle2][index];
                 return (
-                  <div key={item.label} className="group rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4 shadow-lg shadow-black/10 backdrop-blur-xl transition hover:-translate-y-1 hover:border-white/15 sm:p-5">
+                  <div key={item.label} className="group min-w-0 rounded-2xl border border-white/[0.08] bg-white/[0.035] p-3 shadow-lg shadow-black/10 backdrop-blur-xl transition hover:-translate-y-1 hover:border-white/15 sm:p-5">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-zinc-400 sm:text-sm">{t(item.label)}</p>
+                      <p className="min-w-0 break-words text-xs font-medium leading-4 text-zinc-400 sm:text-sm">{t(item.label)}</p>
                       <span className="rounded-xl bg-white/[0.06] p-2 text-zinc-400 transition group-hover:text-amber-200">
                         <MetricIcon size={17} aria-hidden="true" />
                       </span>
                     </div>
-                    <p className={`mt-3 text-3xl font-bold tracking-tight ${item.color}`}>{item.value}</p>
+                    <p className={`mt-3 break-words text-2xl font-bold tracking-tight sm:text-3xl ${item.color}`}>{item.value}</p>
                   </div>
                 );
               })}
@@ -1190,7 +1190,7 @@ function DriverDashboard() {
             </section>
 
             <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-lg shadow-black/10 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="font-semibold text-white">{t("driver_notifications")}</h2>
                   <p className="mt-1 text-sm text-zinc-400">{t("driver_notifications_description")}</p>
@@ -1202,7 +1202,7 @@ function DriverDashboard() {
                     if (!notificationsOpen) markOffersAsRead();
                     setNotificationsOpen((open) => !open);
                   }}
-                  className="shrink-0 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-200 transition hover:border-amber-300/30 hover:bg-zinc-800"
+                  className="min-h-11 w-full shrink-0 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-200 transition hover:border-amber-300/30 hover:bg-zinc-800 sm:w-auto"
                 >
                   {notificationsOpen ? t("driver_notifications_hide") : t("driver_notifications_view")}
                   {unreadOffersCount > 0 && (
@@ -1261,8 +1261,8 @@ function DriverDashboard() {
                         <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{shipment.cargoType} · {shipment.weightKg} kg</p>
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row">
-                        <button type="button" disabled={actingOnOfferId === shipment.id} onClick={() => respondToOffer(shipment, false)} className="min-h-10 w-full rounded-lg border border-zinc-700 px-3 py-2 text-center text-sm leading-5 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 sm:w-auto">{t("driver_reject_job")}</button>
-                        <button type="button" disabled={actingOnOfferId === shipment.id || profile?.isRestricted} onClick={() => respondToOffer(shipment, true)} className="min-h-10 w-full rounded-lg bg-amber-400 px-3 py-2 text-center text-sm font-semibold leading-5 text-zinc-950 hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{t("driver_accept_job")}</button>
+                        <button type="button" disabled={actingOnOfferId === shipment.id} onClick={() => respondToOffer(shipment, false)} className="min-h-11 w-full rounded-lg border border-zinc-700 px-3 py-2 text-center text-sm leading-5 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 sm:w-auto">{t("driver_reject_job")}</button>
+                        <button type="button" disabled={actingOnOfferId === shipment.id || profile?.isRestricted} onClick={() => respondToOffer(shipment, true)} className="min-h-11 w-full rounded-lg bg-amber-400 px-3 py-2 text-center text-sm font-semibold leading-5 text-zinc-950 hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{t("driver_accept_job")}</button>
                       </div>
                     </article>
                   ))}
@@ -1372,7 +1372,7 @@ function DriverDashboard() {
                                       {shipment.customer?.phone && (
                                         <a
                                           href={`tel:${shipment.customer.phone}`}
-                                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-emerald-200"
+                                          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-emerald-200 sm:w-auto"
                                         >
                                           <Phone size={15} aria-hidden="true" />
                                           {t("driver_call_customer")}
@@ -1383,7 +1383,7 @@ function DriverDashboard() {
                                           href={getWhatsAppUrl(shipment.customer.phone)}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] px-3.5 py-2.5 text-sm font-semibold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-400/10"
+                                          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] px-3.5 py-2.5 text-sm font-semibold text-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-400/10 sm:w-auto"
                                         >
                                           <MessageCircle size={15} aria-hidden="true" />
                                           {t("driver_whatsapp_customer")}
@@ -1402,7 +1402,7 @@ function DriverDashboard() {
                                     )}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 rounded-xl border border-amber-300/25 bg-amber-300/[0.06] px-3.5 py-2.5 text-sm font-semibold text-amber-100 transition hover:-translate-y-0.5 hover:bg-amber-300/10"
+                                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-amber-300/25 bg-amber-300/[0.06] px-3.5 py-2.5 text-sm font-semibold text-amber-100 transition hover:-translate-y-0.5 hover:bg-amber-300/10 sm:w-auto"
                                   >
                                     <MapPin size={15} aria-hidden="true" />
                                     {t("driver_navigate_origin")}
@@ -1416,7 +1416,7 @@ function DriverDashboard() {
                                     )}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 rounded-xl bg-amber-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-amber-200"
+                                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-amber-200 sm:w-auto"
                                   >
                                     <Navigation size={15} aria-hidden="true" />
                                     {t("driver_navigate_destination")}

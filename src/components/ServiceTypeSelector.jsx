@@ -27,14 +27,14 @@ function ServiceTypeSelector({ selectedService, onChange, prices }) {
               <Icon type={id} size={38} />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold">{t(label)}</span>
-              <span className="mt-1 block text-xs leading-5 text-zinc-500">{t(description)}</span>
+              <span className="block break-words text-sm font-semibold">{t(label)}</span>
+              <span className="mt-1 block break-words text-xs leading-5 text-zinc-500">{t(description)}</span>
               {prices && (
                 <span className="mt-3 flex flex-col gap-0.5 border-t border-white/10 pt-2.5">
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-200">
                     {t("booking_vehicle_estimated_fare")}
                   </span>
-                  <span className={`text-base font-extrabold tabular-nums leading-6 ${price == null ? "text-zinc-400" : "text-amber-300"}`}>
+                  <span className={`break-words text-base font-extrabold tabular-nums leading-6 [overflow-wrap:anywhere] ${price == null ? "text-zinc-400" : "text-amber-300"}`}>
                     {price == null
                       ? t("booking_vehicle_fare_pending")
                       : `TZS ${Number(price).toLocaleString(locale)}`}

@@ -516,19 +516,19 @@ function AdminDashboard() {
   });
 
   return (
-    <main className="relative min-h-screen text-white">
+    <main className="relative min-h-screen min-w-0 overflow-x-clip text-white">
       <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <header className="mb-6 rounded-2xl border border-white/10 bg-zinc-950/80 p-5 shadow-xl shadow-black/10 sm:p-6">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
+          <div className="flex min-w-0 flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
                 {t("admin_dashboard_eyebrow")}
               </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{t("admin_dashboard_title")}</h1>
-              <p className="mt-2 max-w-2xl text-sm text-zinc-400">{t("admin_dashboard_subtitle")}</p>
+              <h1 className="mt-2 break-words text-2xl font-bold tracking-tight sm:text-3xl">{t("admin_dashboard_title")}</h1>
+              <p className="mt-2 max-w-2xl break-words text-sm leading-5 text-zinc-400">{t("admin_dashboard_subtitle")}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <div className="mr-auto flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 md:mr-0">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
+              <div className="mr-auto flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 md:mr-0">
                 <span className={`h-2.5 w-2.5 rounded-full ${operational ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.65)]" : "bg-amber-400"}`} />
                 <span className="text-xs font-semibold text-zinc-200">
                   {t(operational ? "admin_platform_operational" : "admin_platform_status_unknown")}
@@ -542,7 +542,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => { setLoadingSection(true); setRefreshKey((current) => current + 1); }}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:border-amber-400/60 hover:text-amber-200"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:border-amber-400/60 hover:text-amber-200 sm:w-auto"
               >
                 <RefreshCw size={16} aria-hidden="true" />
                 {t("admin_refresh")}
@@ -550,7 +550,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => { setActiveSection("notifications"); setLoadingSection(true); }}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300 sm:w-auto"
               >
                 <Bell size={16} aria-hidden="true" />
                 <span>{t("admin_section_notifications", { count: unreadCount })}</span>
@@ -570,9 +570,9 @@ function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
           <aside className="min-w-0">
-            <nav className="flex min-w-0 gap-2 overflow-x-auto pb-2 lg:sticky lg:top-24 lg:flex-col lg:overflow-visible" aria-label={t("admin_sections")}>
+            <nav className="grid min-w-0 grid-cols-2 gap-2 pb-1 min-[520px]:grid-cols-3 lg:sticky lg:top-24 lg:flex lg:flex-col lg:overflow-visible" aria-label={t("admin_sections")}>
               {adminSections.map((section) => {
                 const SectionIcon = adminSectionIcons[section];
                 return (
@@ -587,14 +587,14 @@ function AdminDashboard() {
                       setSuccess("");
                     }}
                     aria-current={activeSection === section ? "page" : undefined}
-                    className={`inline-flex min-h-11 shrink-0 items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition lg:w-full ${
+                    className={`inline-flex min-h-11 min-w-0 w-full items-center gap-2 rounded-xl border px-2 py-2 text-left text-xs font-semibold leading-4 transition sm:gap-3 sm:px-3 sm:text-sm lg:w-full ${
                       activeSection === section
                         ? "border-amber-400/70 bg-amber-400/10 text-amber-200 shadow-sm shadow-amber-950/30"
                         : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-amber-400/40 hover:text-zinc-100"
                     }`}
                   >
-                    <SectionIcon size={17} aria-hidden="true" />
-                    <span>{t(`admin_section_${section}`, { count: unreadCount })}</span>
+                    <SectionIcon size={17} className="shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{t(`admin_section_${section}`, { count: unreadCount })}</span>
                     {section === "notifications" && unreadCount > 0 && (
                       <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-zinc-950">
                         {unreadCount}
@@ -610,7 +610,7 @@ function AdminDashboard() {
         {activeSection === "overview" && (
           <section aria-label={t("admin_section_overview")}>
             {!overview ? (
-              <div className="grid gap-3 min-[520px]:grid-cols-2 xl:grid-cols-3" aria-label={t("admin_overview_loading")}>
+              <div className="grid gap-3 min-[400px]:grid-cols-2 xl:grid-cols-3" aria-label={t("admin_overview_loading")}>
                 {Array.from({ length: 6 }, (_, index) => (
                   <div key={index} className="h-32 animate-pulse rounded-2xl border border-white/10 bg-zinc-950/80 p-4">
                     <div className="h-3 w-24 rounded bg-zinc-800" />
@@ -618,11 +618,11 @@ function AdminDashboard() {
                     <div className="mt-3 h-3 w-20 rounded bg-zinc-900" />
                   </div>
                 ))}
-                {error && <p role="alert" className="text-sm text-red-300 min-[520px]:col-span-2 xl:col-span-3">{t("admin_overview_unavailable")}</p>}
+                {error && <p role="alert" className="text-sm text-red-300 min-[400px]:col-span-2 xl:col-span-3">{t("admin_overview_unavailable")}</p>}
               </div>
             ) : (
               <>
-              <div className="mb-5 grid gap-3 min-[520px]:grid-cols-2 xl:grid-cols-3">
+              <div className="mb-5 grid gap-3 min-[400px]:grid-cols-2 xl:grid-cols-3">
                 {[
                   {
                     label: "admin_metric_paid_revenue",
@@ -707,7 +707,7 @@ function AdminDashboard() {
                       }
                       if (section === "complaints") setComplaintStatusFilter("");
                     }}
-                    className="group flex h-full flex-col rounded-2xl border border-white/10 bg-zinc-950/80 p-4 text-left shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-amber-400/60 hover:bg-zinc-900"
+                    className="group flex h-full min-w-0 flex-col rounded-2xl border border-white/10 bg-zinc-950/80 p-3 text-left shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-amber-400/60 hover:bg-zinc-900 sm:p-4"
                   >
                     <span className="flex items-start justify-between gap-3">
                       <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{t(label)}</span>
@@ -768,14 +768,14 @@ function AdminDashboard() {
                   {t("admin_delayed_only")}
                 </label>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("admin_filter_shipment_status")}>
+              <div className="flex flex-wrap gap-2 pb-1" role="group" aria-label={t("admin_filter_shipment_status")}>
                 {["", "PENDING", "IN_TRANSIT", "DELIVERED"].map((status) => (
                   <button
                     key={status || "all"}
                     type="button"
                     aria-pressed={shipmentStatus === status && !delayedOnly}
                     onClick={() => { setLoadingSection(true); setShipmentStatus(status); setDelayedOnly(false); }}
-                    className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`min-h-11 max-w-full rounded-full border px-3 py-2 text-center text-xs font-semibold leading-4 transition ${
                       shipmentStatus === status && !delayedOnly
                         ? "border-amber-400 bg-amber-400/10 text-amber-200"
                         : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-amber-400/40"
@@ -796,7 +796,7 @@ function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => setSelectedShipmentId(shipment.id)}
-                            className="w-full rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left transition hover:border-amber-400/40"
+                            className="min-h-11 w-full rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left transition hover:border-amber-400/40"
                           >
                             <span className="flex flex-wrap items-center justify-between gap-2">
                               <span className="font-semibold text-amber-200">#{shipment.id}{shipment.delayed ? ` · ${t("admin_delayed")}` : ""}</span>
@@ -878,14 +878,14 @@ function AdminDashboard() {
                     className="min-h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-zinc-500 focus:border-amber-400 focus:outline-none"
                   />
                 </label>
-                <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("admin_filter_users")}>
+                <div className="flex flex-wrap gap-2 pb-1" role="group" aria-label={t("admin_filter_users")}>
                   {["ALL", "CUSTOMER", "DRIVER"].map((role) => (
                     <button
                       key={role}
                       type="button"
                       aria-pressed={userRoleFilter === role}
                       onClick={() => setUserRoleFilter(role)}
-                      className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                      className={`min-h-11 max-w-full rounded-full border px-3 py-2 text-center text-xs font-semibold leading-4 transition ${
                         userRoleFilter === role
                           ? "border-amber-400 bg-amber-400 text-zinc-950"
                           : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-amber-400/50 hover:text-amber-200"
@@ -915,7 +915,7 @@ function AdminDashboard() {
                           {t(`admin_user_role_${String(adminUser.role).toLowerCase()}`, { defaultValue: adminUser.role })}
                         </span>
                       </div>
-                      <div className="mt-3 grid gap-1 text-sm text-zinc-400">
+                      <div className="mt-3 grid min-w-0 gap-1 break-words text-sm text-zinc-400 [overflow-wrap:anywhere]">
                         <span>{adminUser.phone || t("admin_not_provided")}</span>
                         {adminUser.companyName && <span>{adminUser.companyName}</span>}
                         <span className="text-xs text-zinc-600">{adminUser.createdAt || t("admin_not_provided")}</span>
@@ -1045,8 +1045,8 @@ function AdminDashboard() {
                       <p className="mt-1 text-xs text-zinc-500">{payment.submittedAt ? new Date(payment.submittedAt).toLocaleString(locale) : ""}</p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "reject")} className="min-h-10 rounded-lg border border-rose-200/25 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-200/10 disabled:opacity-50">{t("admin_commission_reject")}</button>
-                      <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "verify")} className="min-h-10 rounded-lg bg-emerald-200 px-3 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-100 disabled:opacity-50">{t("admin_commission_verify")}</button>
+                      <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "reject")} className="min-h-11 w-full rounded-lg border border-rose-200/25 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-200/10 disabled:opacity-50 sm:w-auto">{t("admin_commission_reject")}</button>
+                      <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "verify")} className="min-h-11 w-full rounded-lg bg-emerald-200 px-3 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-100 disabled:opacity-50 sm:w-auto">{t("admin_commission_verify")}</button>
                     </div>
                   </article>
                 ))}
@@ -1223,12 +1223,12 @@ function AdminDashboard() {
                       {t(`approval_${review.driver.approvalStatus}`)}
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <button
                       type="button"
                       disabled={acting || review.driver.approvalStatus === "APPROVED"}
                       onClick={() => setApprovalConfirmation("approve")}
-                      className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="min-h-11 w-full rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
                     >
                       {acting ? t("admin_saving") : t("admin_approve")}
                     </button>
@@ -1236,7 +1236,7 @@ function AdminDashboard() {
                       type="button"
                       disabled={acting || review.driver.approvalStatus === "REJECTED"}
                       onClick={() => setApprovalConfirmation("reject")}
-                      className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="min-h-11 w-full rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
                     >
                       {t("admin_reject")}
                     </button>
@@ -1372,12 +1372,12 @@ function AdminDashboard() {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   disabled={acting}
                   onClick={() => setApprovalConfirmation(null)}
-                  className="min-h-10 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-50"
+                  className="min-h-11 w-full rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-300 hover:bg-zinc-900 disabled:opacity-50 sm:w-auto"
                 >
                   {t("admin_confirmation_cancel")}
                 </button>
@@ -1385,7 +1385,7 @@ function AdminDashboard() {
                   type="button"
                   disabled={acting}
                   onClick={() => updateApproval(approvalConfirmation)}
-                  className={`min-h-10 rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50 ${
+                  className={`min-h-11 w-full rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50 sm:w-auto ${
                     approvalConfirmation === "approve"
                       ? "bg-amber-400 text-zinc-950 hover:bg-amber-300"
                       : "bg-red-500 text-white hover:bg-red-400"

@@ -102,7 +102,7 @@ function Navbar({ user }) {
         setMenuOpen(false);
         navigate("/driver-dashboard");
       }}
-      className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.035] text-zinc-200 transition hover:border-amber-300/40 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.035] text-zinc-200 transition hover:border-amber-300/40 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
     >
       <Bell size={18} aria-hidden="true" />
       {unreadOfferCount > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-zinc-950 bg-amber-300 px-1 text-[10px] font-bold text-zinc-950">{unreadOfferCount > 9 ? "9+" : unreadOfferCount}</span>}
@@ -111,7 +111,7 @@ function Navbar({ user }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-zinc-950/75 text-white shadow-lg shadow-black/10 backdrop-blur-2xl">
-      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-2 px-3 min-[400px]:px-4 sm:gap-4 sm:px-6 lg:px-8">
         <Link
           to="/dashboard"
           className="flex min-w-0 items-center gap-3"
@@ -146,12 +146,12 @@ function Navbar({ user }) {
           </button>
         </nav>
 
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-2 md:hidden">
           <LanguageSwitcher inline />
           {driverNotificationsButton}
           <button
             type="button"
-            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-white transition hover:border-amber-300/60"
+            className="flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-white transition hover:border-amber-300/60"
             aria-label={menuOpen ? t("close_menu") : t("open_menu")}
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
@@ -188,7 +188,7 @@ function Navbar({ user }) {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-2 w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-amber-200"
+              className="mt-2 min-h-11 w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-amber-200"
             >
               {t("logout")}
             </button>

@@ -44,12 +44,12 @@ function MobileBottomNav({ user }) {
         {links.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={itemClass}>
             <Icon aria-hidden="true" size={21} className="transition-colors duration-200" />
-            <span className="max-w-full truncate">{label}</span>
+            <span className="line-clamp-2 max-w-full break-words text-center leading-3">{label}</span>
           </NavLink>
         ))}
         <button type="button" onClick={handleLogout} className={itemClass({ isActive: false })}>
           <LogOut aria-hidden="true" size={21} className="transition-colors duration-200" />
-          <span className="max-w-full truncate">{t("logout")}</span>
+          <span className="line-clamp-2 max-w-full break-words text-center leading-3">{t("logout")}</span>
         </button>
       </div>
     </nav>

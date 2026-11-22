@@ -38,7 +38,7 @@ function VehicleTypeSelector({ value, onChange }) {
             tabIndex={selected || (!value && index === 0) ? 0 : -1}
             onClick={() => onChange(id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
-            className={`flex min-h-24 items-center gap-3 rounded-lg border px-3 py-3 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+            className={`flex min-h-24 min-w-0 items-center gap-3 rounded-lg border px-3 py-3 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
               selected
                 ? "border-amber-400 bg-amber-400/15 text-amber-200 shadow-[inset_0_0_0_1px_rgb(251_191_36_/_0.35)]"
                 : "border-zinc-700 bg-zinc-900/60 text-zinc-400 hover:border-amber-500/50 hover:text-zinc-200"
@@ -48,8 +48,8 @@ function VehicleTypeSelector({ value, onChange }) {
               <Icon type={id} size={36} />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold">{t(label)}</span>
-              <span className="mt-1 block text-xs leading-4 text-zinc-500">{t(description)}</span>
+              <span className="block break-words text-sm font-semibold">{t(label)}</span>
+              <span className="mt-1 block break-words text-xs leading-4 text-zinc-500">{t(description)}</span>
             </span>
           </button>
         );

@@ -115,17 +115,17 @@ function MyShipments() {
     <main className="min-h-[calc(100vh-4rem)] text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-11 lg:px-8">
         <header className="mb-7 flex flex-col justify-between gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-end">
-          <div>
+          <div className="min-w-0">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100/70">{t("shipments_eyebrow")}</p>
-            <h1 className="text-3xl font-bold tracking-tight text-white">{t("dashboard_my_shipments")}</h1>
-            <p className="mt-2 text-sm text-zinc-400">{t("shipments_subtitle")}</p>
+            <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-3xl">{t("dashboard_my_shipments")}</h1>
+            <p className="mt-2 break-words text-sm leading-5 text-zinc-400">{t("shipments_subtitle")}</p>
           </div>
-          <Link to="/booking" className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 sm:self-auto">
+          <Link to="/booking" className="inline-flex min-h-11 w-full items-center justify-center gap-2 self-start rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 sm:w-auto sm:self-auto">
             <Package size={16} aria-hidden="true" />{t("book_shipment_link")}
           </Link>
         </header>
 
-        {cancelNotice && <div role="status" className="fixed bottom-5 right-5 z-[60] rounded-xl border border-emerald-200/25 bg-zinc-950/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-xl">{cancelNotice}</div>}
+        {cancelNotice && <div role="status" className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] max-w-full break-words rounded-xl border border-emerald-200/25 bg-zinc-950/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-xl md:bottom-5 md:left-auto md:right-5">{cancelNotice}</div>}
 
         <section className="mb-6 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3" aria-label={t("shipments_summary")}>
           <div className="bg-zinc-950/75 p-4 backdrop-blur-xl sm:p-5">
@@ -146,7 +146,7 @@ function MyShipments() {
           <p className="text-sm text-zinc-400">{t("shipments_showing", { count: visibleShipments.length })}</p>
           <label className="flex w-full items-center justify-between gap-3 text-sm text-zinc-400 sm:w-auto sm:justify-start">
             <span>{t("shipments_filter")}</span>
-            <select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-h-10 min-w-0 max-w-[70%] rounded-xl border border-white/10 bg-zinc-950/80 px-3 text-sm text-zinc-100 focus:border-amber-200/50 focus:outline-none sm:max-w-none">
+            <select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-h-11 min-w-0 max-w-[70%] rounded-xl border border-white/10 bg-zinc-950/80 px-3 text-sm text-zinc-100 focus:border-amber-200/50 focus:outline-none sm:max-w-none">
               {statuses.map((status) => <option key={status} value={status}>{status === "ALL" ? t("shipments_all_statuses") : t(`driver_status_${status.toLowerCase()}`)}</option>)}
             </select>
           </label>
@@ -173,33 +173,33 @@ function MyShipments() {
                     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                       <div className="min-w-0 flex-1">
                         <div className="mb-3 flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{t("dashboard_shipment_number", { id: shipment.id })}</span>
-                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusStyles[shipment.status] || "border-white/10 bg-white/5 text-zinc-300"}`}>{t(`driver_status_${String(shipment.status || "unknown").toLowerCase()}`)}</span>
+                          <span className="max-w-full break-words text-xs font-semibold uppercase tracking-wider text-zinc-500">{t("dashboard_shipment_number", { id: shipment.id })}</span>
+                          <span className={`max-w-full break-words rounded-full border px-2.5 py-1 text-center text-[11px] font-semibold leading-4 ${statusStyles[shipment.status] || "border-white/10 bg-white/5 text-zinc-300"}`}>{t(`driver_status_${String(shipment.status || "unknown").toLowerCase()}`)}</span>
                           <span className="text-xs text-zinc-500">{date}</span>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-                          <p className="flex items-start gap-2 break-words text-sm font-medium text-white"><MapPin size={15} className="mt-0.5 shrink-0 text-emerald-200" aria-hidden="true" />{shipment.origin}</p>
+                          <p className="flex min-w-0 items-start gap-2 break-words text-sm font-medium text-white [overflow-wrap:anywhere]"><MapPin size={15} className="mt-0.5 shrink-0 text-emerald-200" aria-hidden="true" />{shipment.origin}</p>
                           <ArrowRight size={16} className="hidden text-zinc-600 sm:block" aria-hidden="true" />
-                          <p className="flex items-start gap-2 break-words text-sm font-medium text-white"><MapPin size={15} className="mt-0.5 shrink-0 text-rose-200" aria-hidden="true" />{shipment.destination}</p>
+                          <p className="flex min-w-0 items-start gap-2 break-words text-sm font-medium text-white [overflow-wrap:anywhere]"><MapPin size={15} className="mt-0.5 shrink-0 text-rose-200" aria-hidden="true" />{shipment.destination}</p>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-400">
-                          <span className="inline-flex items-center gap-1.5"><Truck size={13} aria-hidden="true" />{shipment.cargoType || "—"}</span>
+                          <span className="inline-flex min-w-0 items-center gap-1.5 break-words [overflow-wrap:anywhere]"><Truck size={13} className="shrink-0" aria-hidden="true" />{shipment.cargoType || "—"}</span>
                           <span>{shipment.weightKg ?? "—"} kg</span>
                           {shipment.distanceKm != null && <span className="inline-flex items-center gap-1"><Route size={13} aria-hidden="true" />{shipment.distanceKm} km</span>}
-                          <span className="font-semibold text-amber-100">{shipment.price == null ? t("booking_cost_pending") : `TSh ${Number(shipment.price).toLocaleString(locale)}`}</span>
+                          <span className="break-words font-semibold text-amber-100 [overflow-wrap:anywhere]">{shipment.price == null ? t("booking_cost_pending") : `TSh ${Number(shipment.price).toLocaleString(locale)}`}</span>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end lg:flex-col">
                         {(["PENDING", "ASSIGNED"].includes(shipment.status)) && (
-                          <button type="button" onClick={() => { setCancelError(""); setCancelTarget(shipment); }} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
+                          <button type="button" onClick={() => { setCancelError(""); setCancelTarget(shipment); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
                         )}
-                        <Link to={`/tracking?id=${shipment.id}`} className="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-200/25 bg-sky-200/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-sky-100 transition hover:bg-sky-200/[0.14] sm:w-auto">
+                        <Link to={`/tracking?id=${shipment.id}`} className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-200/25 bg-sky-200/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-sky-100 transition hover:bg-sky-200/[0.14] sm:w-auto">
                           {t("tracking_track_live")}<ArrowRight size={15} aria-hidden="true" />
                         </Link>
                       </div>
                     </div>
-                    <div className="mt-5 overflow-x-auto" role="region" aria-label={t("tracking_progress")} tabIndex={0}>
-                      <ol className="grid min-w-[30rem] grid-cols-5 sm:min-w-0">
+                    <div className="mt-5 min-w-0">
+                      <ol className="grid min-w-0 grid-cols-5">
                         {progressStages.map((status, index) => {
                           const complete = stage >= index && stage >= 0;
                           const connectorComplete = stage > index;
@@ -210,7 +210,7 @@ function MyShipments() {
                               <span aria-hidden="true" className={`absolute left-1/2 top-[5px] h-0.5 w-full ${connectorComplete ? connectorStyles : "bg-white/10"}`} />
                             )}
                             <span aria-hidden="true" className={`relative z-10 mx-auto block size-3 rounded-full border ${complete ? stepStyles.node : "border-zinc-600 bg-zinc-950"}`} />
-                            <span className={`mt-2 block min-h-8 px-1 text-[10px] font-medium leading-tight sm:text-xs ${complete ? stepStyles.label : "text-zinc-600"}`}>{t(`tracking_timeline_${status.toLowerCase()}`)}</span>
+                            <span className={`mx-auto mt-2 block min-h-9 max-w-[4rem] break-words px-0.5 text-[9px] font-medium leading-3 [overflow-wrap:anywhere] min-[400px]:text-[10px] sm:max-w-none sm:text-xs sm:leading-tight ${complete ? stepStyles.label : "text-zinc-600"}`}>{t(`tracking_timeline_${status.toLowerCase()}`)}</span>
                           </li>;
                         })}
                       </ol>

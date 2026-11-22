@@ -365,16 +365,16 @@ function Tracking() {
   if (!user) return null;
 
   return (
-    <div className="relative min-h-screen text-white">
+    <div className="relative min-h-screen min-w-0 overflow-x-clip text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <header className="mb-8 flex items-start gap-4">
+        <header className="mb-8 flex min-w-0 items-start gap-3 sm:gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-300/15 bg-sky-300/[0.08] text-sky-200">
             <Navigation size={21} aria-hidden="true" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-200/70">{t("tracking_eyebrow")}</p>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{t("tracking_title")}</h1>
-            <p className="mt-1 text-sm text-zinc-400">{t("tracking_subtitle")}</p>
+            <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-3xl">{t("tracking_title")}</h1>
+            <p className="mt-1 break-words text-sm leading-5 text-zinc-400">{t("tracking_subtitle")}</p>
           </div>
         </header>
 
@@ -383,7 +383,7 @@ function Tracking() {
             {error}
           </div>
         )}
-        {cancelSuccess && <div role="status" className="fixed bottom-5 right-5 z-[60] rounded-xl border border-emerald-200/25 bg-zinc-950/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-xl">{t("customer_cancel_success")}</div>}
+        {cancelSuccess && <div role="status" className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] max-w-full break-words rounded-xl border border-emerald-200/25 bg-zinc-950/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-xl md:bottom-5 md:left-auto md:right-5">{t("customer_cancel_success")}</div>}
 
         {loading || shipmentDetailLoading ? (
           <div role="status" className="flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-900 px-5 py-6 text-sm text-zinc-300">
@@ -395,7 +395,7 @@ function Tracking() {
             <p className="text-base font-medium text-red-200">{shipmentDetailError}</p>
             <Link
               to="/dashboard"
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300"
             >
               {t("tracking_back_to_dashboard")}
             </Link>
@@ -406,7 +406,7 @@ function Tracking() {
             <p className="mt-2 text-sm text-zinc-500">{t("no_shipments")}</p>
             <Link
               to="/dashboard"
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-300"
             >
               {t("tracking_back_to_dashboard")}
             </Link>
@@ -418,7 +418,7 @@ function Tracking() {
                 <p className="text-sm text-amber-100">{t("tracking_select_shipment_fallback")}</p>
                 <Link
                   to="/dashboard"
-                  className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-amber-300/30 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10"
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-amber-300/30 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-300/10"
                 >
                   {t("tracking_back_to_dashboard")}
                 </Link>
@@ -429,7 +429,7 @@ function Tracking() {
                 <div
                   key={s?.id}
                   onClick={() => viewTracking(s)}
-                  className={`cursor-pointer rounded-3xl border bg-gradient-to-br from-white/[0.045] to-zinc-950/70 p-4 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 sm:p-6 ${
+                  className={`min-w-0 cursor-pointer rounded-3xl border bg-gradient-to-br from-white/[0.045] to-zinc-950/70 p-4 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 sm:p-6 ${
                     Number(selectedShipmentId) === Number(s?.id)
                       ? "border-sky-300/30 shadow-sky-950/10"
                       : "border-white/[0.08] hover:border-white/15"
@@ -441,12 +441,12 @@ function Tracking() {
                       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
                         <div className="min-w-0">
                           <p className="text-[11px] uppercase tracking-wider text-zinc-500">{t("origin")}</p>
-                          <p className="mt-1 break-words font-medium text-white">{s?.origin || "—"}</p>
+                          <p className="mt-1 break-words font-medium leading-5 text-white [overflow-wrap:anywhere]">{s?.origin || "—"}</p>
                         </div>
                         <ArrowRight size={17} className="hidden text-zinc-600 sm:block" aria-hidden="true" />
                         <div className="min-w-0">
                           <p className="text-[11px] uppercase tracking-wider text-zinc-500">{t("destination")}</p>
-                          <p className="mt-1 break-words font-medium text-white">{s?.destination || "—"}</p>
+                          <p className="mt-1 break-words font-medium leading-5 text-white [overflow-wrap:anywhere]">{s?.destination || "—"}</p>
                         </div>
                       </div>
                     </div>
@@ -459,13 +459,13 @@ function Tracking() {
                     </span>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs leading-5 text-zinc-400">
-                    <span className="inline-flex items-center gap-1.5"><Package size={14} className="text-zinc-500" aria-hidden="true" />{s?.cargoType || "—"}</span>
+                    <span className="inline-flex min-w-0 items-center gap-1.5 break-words [overflow-wrap:anywhere]"><Package size={14} className="shrink-0 text-zinc-500" aria-hidden="true" />{s?.cargoType || "—"}</span>
                     <span>{s?.weightKg ?? "—"} kg</span>
                     {s?.price != null && <span>{Number(s.price).toLocaleString(locale)} TZS</span>}
                   </div>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
                     {["PENDING", "ASSIGNED"].includes(s?.status) && (
-                      <button type="button" onClick={(event) => { event.stopPropagation(); setCancelError(""); setCancelTarget(s); }} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); setCancelError(""); setCancelTarget(s); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
                     )}
                     <button
                       type="button"
@@ -473,7 +473,7 @@ function Tracking() {
                         event.stopPropagation();
                         viewTracking(s);
                       }}
-                      className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2 text-center text-sm font-bold leading-5 text-zinc-950 transition hover:-translate-y-0.5 hover:bg-sky-200 sm:w-auto"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2 text-center text-sm font-bold leading-5 text-zinc-950 transition hover:-translate-y-0.5 hover:bg-sky-200 sm:w-auto"
                     >
                       <Navigation size={15} aria-hidden="true" />
                       {t("tracking_track_live")}
@@ -523,10 +523,10 @@ function Tracking() {
                                 {completed ? <Check size={13} aria-hidden="true" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                               </span>
                               <div className="min-w-0 pb-3 sm:pb-0">
-                                <p className={`text-xs font-semibold ${completed ? stepStyles.label : "text-zinc-500"}`}>
+                                <p className={`break-words text-xs font-semibold leading-5 [overflow-wrap:anywhere] ${completed ? stepStyles.label : "text-zinc-500"}`}>
                                   {t(`tracking_timeline_${status.toLowerCase()}`)}
                                 </p>
-                                <p className="mt-1 text-[11px] text-zinc-500">
+                                <p className="mt-1 break-words text-[11px] leading-4 text-zinc-500 [overflow-wrap:anywhere]">
                                   {historyEntry?.timestamp
                                     ? new Date(historyEntry.timestamp).toLocaleString(locale)
                                     : completed ? t("tracking_status_complete") : t("tracking_status_upcoming")}
@@ -555,13 +555,13 @@ function Tracking() {
                           <dl className="grid gap-3 text-sm sm:grid-cols-3">
                             <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
                               <dt className="text-xs text-zinc-500">{t("tracking_driver_name")}</dt>
-                              <dd className="mt-1 font-medium text-white">{driverInfo.driverName || t("tracking_driver_info_unavailable")}</dd>
+                              <dd className="mt-1 break-words font-medium text-white [overflow-wrap:anywhere]">{driverInfo.driverName || t("tracking_driver_info_unavailable")}</dd>
                             </div>
                             <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
                               <dt className="text-xs text-zinc-500">{t("tracking_driver_phone")}</dt>
                               <dd className="mt-1 font-medium text-white">
                                 {driverInfo.phoneNumber ? (
-                                  <a href={`tel:${driverInfo.phoneNumber}`} className="hover:text-sky-200">
+                                  <a href={`tel:${driverInfo.phoneNumber}`} className="break-all hover:text-sky-200">
                                     {driverInfo.phoneNumber}
                                   </a>
                                 ) : t("tracking_driver_info_unavailable")}
@@ -569,17 +569,17 @@ function Tracking() {
                             </div>
                             <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
                               <dt className="text-xs text-zinc-500">{t("tracking_vehicle_registration")}</dt>
-                              <dd className="mt-1 font-medium text-white">{driverInfo.vehicleRegistrationNumber || t("tracking_driver_info_unavailable")}</dd>
+                              <dd className="mt-1 break-words font-medium text-white [overflow-wrap:anywhere]">{driverInfo.vehicleRegistrationNumber || t("tracking_driver_info_unavailable")}</dd>
                             </div>
                           </dl>
                           <div className="mt-4 flex flex-wrap gap-2">
                             {driverInfo.phoneNumber && (
-                              <a href={`tel:${driverInfo.phoneNumber}`} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-emerald-200">
+                              <a href={`tel:${driverInfo.phoneNumber}`} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-3.5 py-2.5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-emerald-200 sm:w-auto">
                                 <Phone size={15} aria-hidden="true" />{t("tracking_call_driver")}
                               </a>
                             )}
                             {getWhatsAppUrl(driverInfo.phoneNumber) && (
-                              <a href={getWhatsAppUrl(driverInfo.phoneNumber)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] px-3.5 py-2.5 text-sm font-semibold text-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-300/10">
+                              <a href={getWhatsAppUrl(driverInfo.phoneNumber)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] px-3.5 py-2.5 text-sm font-semibold text-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-300/10 sm:w-auto">
                                 <MessageCircle size={15} aria-hidden="true" />{t("tracking_message_driver")}
                               </a>
                             )}
@@ -614,7 +614,7 @@ function Tracking() {
                           <p className="mt-1 text-3xl font-bold tracking-[0.25em] text-amber-200" aria-label={t("customer_delivery_code")}>{visibleDeliveryCode.code}</p>
                           <p className="mt-2 text-xs leading-5 text-zinc-300">{t("customer_delivery_code_help")}</p>
                         </div>
-                        <button type="button" onClick={copyDeliveryCode} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-200/25 bg-zinc-950/50 px-4 py-2.5 text-sm font-semibold text-amber-100 transition hover:bg-zinc-950/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200">
+                        <button type="button" onClick={copyDeliveryCode} className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-200/25 bg-zinc-950/50 px-4 py-2.5 text-sm font-semibold text-amber-100 transition hover:bg-zinc-950/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 sm:w-auto">
                           <Copy size={16} aria-hidden="true" />{deliveryCodeCopied ? t("customer_delivery_code_copied") : t("customer_delivery_code_copy")}
                         </button>
                       </div>
@@ -689,7 +689,7 @@ function Tracking() {
                         />
                       </label>
                       <button type="submit" disabled={complaintSubmitting}
-                        className="mt-3 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50">
+                        className="mt-3 min-h-11 w-full rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50 sm:w-auto">
                         {complaintSubmitting ? t("tracking_complaint_submitting") : t("tracking_complaint_submit")}
                       </button>
                       {myComplaints.filter((complaint) => complaint.shipmentId === s?.id).length > 0 && (

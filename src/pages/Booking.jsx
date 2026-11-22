@@ -179,13 +179,13 @@ function Booking() {
   const inputClass = "w-full rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-300/15";
 
   return (
-    <main className="relative min-h-[calc(100vh-4rem)] overflow-hidden text-white">
+    <main className="relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.11),_transparent_65%)]" />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <header className="mb-8 max-w-3xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
-          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">{t("booking_subtitle")}</p>
+          <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
+          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400 sm:text-base">{t("booking_subtitle")}</p>
         </header>
 
         {error && (
@@ -212,8 +212,8 @@ function Booking() {
                   <Route size={19} aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className="font-semibold text-white">{t("booking_locations_section")}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">{t("booking_locations_section_hint")}</p>
+                  <h2 className="break-words font-semibold text-white">{t("booking_locations_section")}</h2>
+                  <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{t("booking_locations_section_hint")}</p>
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -254,8 +254,8 @@ function Booking() {
                   <Package size={19} aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className="font-semibold text-white">{t("booking_cargo_section")}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">{t("booking_cargo_section_hint")}</p>
+                  <h2 className="break-words font-semibold text-white">{t("booking_cargo_section")}</h2>
+                  <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{t("booking_cargo_section_hint")}</p>
                 </div>
               </div>
               <label className="block text-sm font-medium text-zinc-300">
@@ -292,8 +292,8 @@ function Booking() {
                   <Truck size={19} aria-hidden="true" />
                 </span>
                 <div>
-                  <h2 className="font-semibold text-white">{t("booking_vehicle_section")}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">{t("booking_vehicle_section_hint")}</p>
+                  <h2 className="break-words font-semibold text-white">{t("booking_vehicle_section")}</h2>
+                  <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{t("booking_vehicle_section_hint")}</p>
                 </div>
               </div>
               <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} prices={estimatedPrices || {}} />

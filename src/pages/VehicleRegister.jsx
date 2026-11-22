@@ -27,18 +27,11 @@ function VehicleRegister() {
   });
   const [vehiclePhotos, setVehiclePhotos] = useState({});
   const [myVehicles, setMyVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [vehicleLoadFailed, setVehicleLoadFailed] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const refreshVehicles = async () => {
-    try {
-      const response = await api.get(`/vehicles/driver/${userId}`);
-      setMyVehicles(response.data);
-    } catch {
-      setError(t("backend_error"));
-    }
-  };
 
   useEffect(() => {
     if (!userId) {
@@ -54,9 +47,17 @@ function VehicleRegister() {
     const loadVehicles = async () => {
       try {
         const response = await api.get(`/vehicles/driver/${userId}`);
-        if (isActive) setMyVehicles(response.data);
+        if (isActive) {
+          setMyVehicles(response.data);
+          setVehicleLoadFailed(false);
+        }
       } catch {
-        if (isActive) setError(t("backend_error"));
+        if (isActive) {
+          setError(t("backend_error"));
+          setVehicleLoadFailed(true);
+        }
+      } finally {
+        if (isActive) setLoadingVehicles(false);
       }
     };
 
@@ -80,6 +81,10 @@ function VehicleRegister() {
       setError(t("vehicle_type_required"));
       return;
     }
+    if (myVehicles.length > 0) {
+      setError(t("driver_vehicle_single_limit"));
+      return;
+    }
     if (vehiclePhotoFields.some(({ name }) => !isValidUpload(vehiclePhotos[name], vehiclePhotoTypes))) {
       const hasOversizedPhoto = vehiclePhotoFields.some(({ name }) => vehiclePhotos[name]?.size > 1_000_000);
       setError(hasOversizedPhoto ? t("driver_photo_too_large") : t("driver_invalid_photo"));
@@ -97,16 +102,18 @@ function VehicleRegister() {
       const body = new FormData();
       body.append("vehicle", new Blob([JSON.stringify(payload)], { type: "application/json" }));
       vehiclePhotoFields.forEach(({ name }) => body.append(name, vehiclePhotos[name]));
-      await api.post("/vehicles/onboard", body, {
+      const response = await api.post("/vehicles/onboard", body, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      setMyVehicles([response.data]);
       setSuccess(t("vehicle_success"));
       setFormData({ plateNumber: "", vehicleType: "", capacityKg: "" });
       setVehiclePhotos({});
-      refreshVehicles();
     } catch (err) {
       if (err.response && err.response.data) {
-        setError(err.response.data);
+        setError(err.response.data === "A driver can register only one vehicle"
+          ? t("driver_vehicle_single_limit")
+          : err.response.data);
       } else {
         setError(t("backend_error"));
       }
@@ -136,6 +143,15 @@ function VehicleRegister() {
             </div>
           )}
 
+          {loadingVehicles ? (
+            <p className="rounded-xl border border-white/10 bg-zinc-900/70 px-4 py-5 text-sm text-zinc-400">
+              {t("vehicle_loading_profile")}
+            </p>
+          ) : vehicleLoadFailed ? (
+            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-300">
+              {t("vehicle_profile_load_failed")}
+            </p>
+          ) : myVehicles.length === 0 ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-zinc-400 text-sm font-medium mb-2">
@@ -211,24 +227,31 @@ function VehicleRegister() {
               {loading ? t("vehicle_loading") : t("vehicle_submit")}
             </button>
           </form>
-        </div>
-
-        {myVehicles.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <h3 className="text-white font-semibold mb-4">{t("my_vehicles")}</h3>
-            <div className="space-y-3">
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-zinc-900/70 p-5 sm:p-6">
+              <h3 className="mb-1 font-semibold text-white">{t("driver_registered_vehicle")}</h3>
+              <p className="mb-4 text-sm text-zinc-400">{t("driver_vehicle_single_limit")}</p>
+              <div className="space-y-3">
               {myVehicles.map((v) => (
                 <div key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-zinc-800 px-4 py-3">
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-white font-medium">{v.plateNumber}</span>
                     <span className="text-zinc-500 text-sm ml-3">{v.vehicleType}</span>
                   </div>
                   <span className="text-zinc-400 text-sm">{v.capacityKg} kg</span>
                 </div>
               ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/driver-dashboard")}
+                className="mt-5 min-h-11 w-full rounded-lg border border-amber-400/30 px-4 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/10"
+              >
+                {t("driver_show_profile")}
+              </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -391,7 +391,11 @@ function AdminDashboard() {
       setSuccess(t(action === "approve" ? "admin_driver_approved" : "admin_driver_rejected"));
       setReview((current) => ({
         ...current,
-        driver: { ...current.driver, approvalStatus: response.data.approvalStatus },
+        driver: {
+          ...current.driver,
+          approvalStatus: response.data.approvalStatus,
+          verificationUpdatePending: false,
+        },
       }));
       setLoadingDrivers(true);
       setRefreshKey((current) => current + 1);
@@ -1219,6 +1223,11 @@ function AdminDashboard() {
                     <h2 className="text-xl font-bold">{review.driver.fullName}</h2>
                     <p className="mt-1 break-all text-sm text-zinc-400">{review.driver.email}</p>
                     <p className="mt-1 text-sm text-zinc-400">{review.driver.phone}</p>
+                    {review.driver.verificationUpdatePending && (
+                      <p className="mt-3 max-w-xl rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-sm leading-5 text-amber-200">
+                        {t("admin_driver_profile_update_pending")}
+                      </p>
+                    )}
                     <span className="mt-3 inline-flex rounded-full border border-amber-500/30 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
                       {t(`approval_${review.driver.approvalStatus}`)}
                     </span>

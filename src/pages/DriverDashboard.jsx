@@ -147,6 +147,7 @@ function DriverDashboard() {
   const previousOfferIds = useRef(null);
   const hasGeolocation = typeof navigator !== "undefined" && "geolocation" in navigator;
   const [shipments, setShipments] = useState([]);
+  const [shipmentView, setShipmentView] = useState("active");
   const [offers, setOffers] = useState([]);
   const [profile, setProfile] = useState(null);
   const [profileForm, setProfileForm] = useState({
@@ -166,6 +167,8 @@ function DriverDashboard() {
     capacityKg: "",
   });
   const [vehiclePhotos, setVehiclePhotos] = useState({});
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [vehicleEditorOpen, setVehicleEditorOpen] = useState(false);
   const [locations, setLocations] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -184,6 +187,18 @@ function DriverDashboard() {
   const [deliveryCodeError, setDeliveryCodeError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const hasSavedVerificationDetails = Boolean(
+    profile?.profileComplete
+      || profile?.fullName?.trim()
+      || profile?.phone?.trim()
+      || profile?.nidaNumber?.trim()
+      || profile?.licenseNumber?.trim()
+      || profile?.licenseExpiry
+      || profile?.hasFacePhoto
+      || profile?.hasNidaDocument
+      || profile?.hasLicenseDocument
+  );
+  const shouldCollapseProfileForm = hasSavedVerificationDetails || vehicles.length > 0;
 
   useEffect(() => {
     if (!userId) {
@@ -477,6 +492,13 @@ function DriverDashboard() {
         licenseExpiry: profileForm.licenseExpiry,
       });
       let updatedProfile = profileResponse.data;
+      setProfile(updatedProfile);
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      localStorage.setItem("user", JSON.stringify({
+        ...storedUser,
+        fullName: updatedProfile.fullName,
+        phone: updatedProfile.phone,
+      }));
 
       if (facePhoto) {
         const base64Data = await new Promise((resolve, reject) => {
@@ -514,12 +536,7 @@ function DriverDashboard() {
       }
 
       setProfile(updatedProfile);
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      localStorage.setItem("user", JSON.stringify({
-        ...storedUser,
-        fullName: updatedProfile.fullName,
-        phone: updatedProfile.phone,
-      }));
+      setProfileEditorOpen(false);
       setSuccess(t("driver_profile_saved"));
     } catch (err) {
       setError(typeof err.response?.data === "string" ? err.response.data : t("backend_error"));
@@ -532,7 +549,20 @@ function DriverDashboard() {
     event.preventDefault();
     setError("");
     setSuccess("");
-    if (vehiclePhotoFields.some(({ name }) => !isValidUpload(vehiclePhotos[name], vehiclePhotoTypes))) {
+    if (vehicles.length > 1 || (vehicles.length === 1 && !vehicleEditorOpen)) {
+      setError(t("driver_vehicle_single_limit"));
+      return;
+    }
+    if (!vehicleForm.vehicleType) {
+      setError(t("vehicle_type_required"));
+      return;
+    }
+    const missingRequiredPhoto = vehicles.length === 0
+      && vehiclePhotoFields.some(({ name }) => !isValidUpload(vehiclePhotos[name], vehiclePhotoTypes));
+    const invalidPhoto = vehiclePhotoFields.some(({ name }) => (
+      vehiclePhotos[name] && !isValidUpload(vehiclePhotos[name], vehiclePhotoTypes)
+    ));
+    if (missingRequiredPhoto || invalidPhoto) {
       const hasOversizedPhoto = vehiclePhotoFields.some(({ name }) => vehiclePhotos[name]?.size > 1_000_000);
       setError(hasOversizedPhoto ? t("driver_photo_too_large") : t("driver_invalid_photo"));
       return;
@@ -547,16 +577,36 @@ function DriverDashboard() {
       };
       const body = new FormData();
       body.append("vehicle", new Blob([JSON.stringify(payload)], { type: "application/json" }));
-      vehiclePhotoFields.forEach(({ name }) => body.append(name, vehiclePhotos[name]));
-      const response = await api.post("/vehicles/onboard", body, {
-        headers: { "Content-Type": "multipart/form-data" },
+      vehiclePhotoFields.forEach(({ name }) => {
+        if (vehiclePhotos[name]) body.append(name, vehiclePhotos[name]);
       });
-      setVehicles((currentVehicles) => [...currentVehicles, response.data]);
+      const request = vehicles.length > 0
+        ? api.put(`/vehicles/${vehicles[0].id}/onboard`, body, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        : api.post("/vehicles/onboard", body, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      const response = await request;
+      setVehicles([response.data]);
+      setProfile((currentProfile) => (
+        currentProfile && ["APPROVED", "REJECTED"].includes(currentProfile.approvalStatus)
+          ? {
+            ...currentProfile,
+            available: false,
+            approvalStatus: "PENDING_APPROVAL",
+            verificationUpdatePending: true,
+          }
+          : currentProfile
+      ));
       setVehicleForm({ plateNumber: "", vehicleType: "", capacityKg: "" });
       setVehiclePhotos({});
-      setSuccess(t("driver_vehicle_registered"));
+      setVehicleEditorOpen(false);
+      setSuccess(vehicles.length > 0 ? t("driver_vehicle_updated") : t("driver_vehicle_registered"));
     } catch (err) {
-      setError(typeof err.response?.data === "string" ? err.response.data : t("backend_error"));
+      setError(err.response?.data === "A driver can register only one vehicle"
+        ? t("driver_vehicle_single_limit")
+        : typeof err.response?.data === "string" ? err.response.data : t("backend_error"));
     } finally {
       setSavingVehicle(false);
     }
@@ -755,10 +805,15 @@ function DriverDashboard() {
     },
   ];
 
+  const activeShipments = shipments.filter(
+    (shipment) => !["DELIVERED", "PENDING"].includes(shipment.status),
+  );
+  const deliveredShipments = shipments.filter((shipment) => shipment.status === "DELIVERED");
+  const displayedShipments = shipmentView === "history" ? deliveredShipments : activeShipments;
   const groups = statusOrder
     .map((status) => ({
       status,
-      shipments: shipments.filter((shipment) => shipment.status === status),
+      shipments: displayedShipments.filter((shipment) => shipment.status === status),
     }))
     .filter((group) => group.status !== "PENDING")
     .filter((group) => group.shipments.length > 0);
@@ -981,8 +1036,23 @@ function DriverDashboard() {
                     </h2>
                     <p className="mt-1 text-sm text-zinc-400">{t("driver_profile_subtitle")}</p>
                   </div>
+                  {shouldCollapseProfileForm && (
+                    <button
+                      type="button"
+                      aria-expanded={profileEditorOpen}
+                      onClick={() => setProfileEditorOpen((open) => !open)}
+                      className="min-h-11 shrink-0 rounded-lg border border-amber-400/30 px-3 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/10"
+                    >
+                      {t(profileEditorOpen ? "driver_hide_profile" : "driver_show_profile")}
+                    </button>
+                  )}
                 </div>
-                {profile?.approvalStatus === "PENDING_APPROVAL" && (
+                {profile?.verificationUpdatePending && (
+                  <p className="mb-4 rounded-lg border border-amber-500/20 bg-amber-400/5 px-3 py-2 text-xs text-amber-200">
+                    {t("driver_reverification_pending_notice")}
+                  </p>
+                )}
+                {profile?.approvalStatus === "PENDING_APPROVAL" && !profile?.verificationUpdatePending && (
                   <p className="mb-4 rounded-lg border border-amber-500/20 bg-amber-400/5 px-3 py-2 text-xs text-amber-200">
                     {t("driver_approval_pending_notice")}
                   </p>
@@ -996,6 +1066,36 @@ function DriverDashboard() {
                   <p className="mb-4 text-xs text-amber-200/80">{t("driver_vehicle_required_online")}</p>
                 ) : null}
 
+                {shouldCollapseProfileForm && (
+                  <div className="mb-4 rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{profile.fullName || userFullName}</p>
+                        <p className="mt-1 break-all text-sm text-zinc-400">{profile.phone || userPhone}</p>
+                        <p className="mt-2 text-xs text-zinc-500">
+                          {t("license_number")}: {profile.licenseNumber || t("admin_not_provided")}
+                        </p>
+                        <p className="mt-2 text-xs text-zinc-500">
+                          {t("license_expiry")}: {profile.licenseExpiry || t("admin_not_provided")}
+                        </p>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                        profile.approvalStatus === "APPROVED"
+                          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+                          : profile.approvalStatus === "REJECTED"
+                            ? "border-red-400/30 bg-red-400/10 text-red-200"
+                            : "border-amber-400/30 bg-amber-400/10 text-amber-200"
+                      }`}>
+                        {t(`approval_${profile.approvalStatus}`)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-zinc-400">
+                      {t(hasSavedVerificationDetails ? "driver_profile_summary" : "driver_profile_subtitle")}
+                    </p>
+                  </div>
+                )}
+
+                {(!shouldCollapseProfileForm || profileEditorOpen) && (
                 <form onSubmit={saveDriverProfile} className="grid gap-3 sm:grid-cols-2">
                   <label className="text-sm text-zinc-300">
                     <span className="mb-1 block">{t("full_name")}</span>
@@ -1104,6 +1204,7 @@ function DriverDashboard() {
                     {savingProfile ? t("driver_updating") : t("driver_save_profile")}
                   </button>
                 </form>
+                )}
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
@@ -1112,15 +1213,38 @@ function DriverDashboard() {
                   {t("driver_vehicle")}
                 </h2>
                 {vehicles.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {vehicles.map((vehicle) => (
-                      <div key={vehicle.id} className="flex flex-col gap-1 rounded-lg bg-zinc-900/80 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-                        <span className="font-medium text-white">{vehicle.plateNumber}</span>
-                        <span className="break-words text-zinc-400">{vehicle.vehicleType} · {vehicle.capacityKg} kg</span>
+                  <div className="mb-4 rounded-xl border border-white/10 bg-zinc-950/60 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-white">{vehicles[0].plateNumber}</p>
+                        <p className="mt-1 break-words text-sm text-zinc-400">
+                          {vehicles[0].vehicleType} · {vehicles[0].capacityKg} kg
+                        </p>
                       </div>
-                    ))}
+                      <button
+                        type="button"
+                        aria-expanded={vehicleEditorOpen}
+                        onClick={() => {
+                          const vehicle = vehicles[0];
+                          if (!vehicleEditorOpen && vehicle) {
+                            setVehicleForm({
+                              plateNumber: vehicle.plateNumber || "",
+                              vehicleType: vehicle.vehicleType || "",
+                              capacityKg: vehicle.capacityKg || "",
+                            });
+                            setVehiclePhotos({});
+                          }
+                          setVehicleEditorOpen((open) => !open);
+                        }}
+                        className="min-h-11 shrink-0 rounded-lg border border-amber-400/30 px-3 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/10"
+                      >
+                        {t(vehicleEditorOpen ? "driver_hide_vehicle" : "driver_edit_vehicle")}
+                      </button>
+                    </div>
+                    <p className="mt-3 text-xs text-zinc-500">{t("driver_vehicle_single_limit")}</p>
                   </div>
                 )}
+                {(vehicles.length === 0 || vehicleEditorOpen) && (
                 <form onSubmit={registerVehicle} className="space-y-3">
                   <label className="block text-sm text-zinc-300">
                     <span className="mb-1 block">{t("plate_number")}</span>
@@ -1158,13 +1282,16 @@ function DriverDashboard() {
                     <legend className="mb-2 text-sm font-medium text-zinc-300">
                       {t("vehicle_photos_title")}
                     </legend>
+                    {vehicles.length > 0 && (
+                      <p className="text-xs text-zinc-500">{t("driver_vehicle_photo_optional")}</p>
+                    )}
                     {vehiclePhotoFields.map(({ name, label }) => (
                       <label key={name} className="block text-sm text-zinc-300">
                         <span className="mb-1 block">{t(label)}</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
-                          required
+                          required={vehicles.length === 0}
                           onChange={(event) => setVehiclePhotos((current) => ({
                             ...current,
                             [name]: event.target.files?.[0] || null,
@@ -1183,9 +1310,12 @@ function DriverDashboard() {
                     disabled={savingVehicle}
                     className="w-full rounded-lg border border-amber-500/40 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:bg-amber-500/10 disabled:opacity-50"
                   >
-                    {savingVehicle ? t("driver_updating") : t("driver_register_vehicle")}
+                    {savingVehicle
+                      ? t("driver_updating")
+                      : t(vehicles.length > 0 ? "driver_update_vehicle" : "driver_register_vehicle")}
                   </button>
                 </form>
+                )}
               </div>
             </section>
 
@@ -1276,16 +1406,58 @@ function DriverDashboard() {
               </div>
             ) : (
               <div className="space-y-8">
-                <div className="flex items-end justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/70">{t("driver_shipment_overview")}</p>
                     <h2 className="text-2xl font-bold tracking-tight text-white">{t("driver_shipments_heading")}</h2>
                   </div>
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-300">
-                    {groups.reduce((count, group) => count + group.shipments.length, 0)}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+                    <div className="inline-flex max-w-full rounded-xl border border-white/10 bg-zinc-950/60 p-1" role="group" aria-label={t("driver_shipments_heading")}>
+                      <button
+                        type="button"
+                        aria-pressed={shipmentView === "active"}
+                        onClick={() => setShipmentView("active")}
+                        className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                          shipmentView === "active"
+                            ? "bg-amber-300 text-zinc-950"
+                            : "text-zinc-300 hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {t("driver_active_shipments")}
+                        <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+                          shipmentView === "active" ? "bg-zinc-950/10" : "bg-white/[0.08]"
+                        }`}>{activeShipments.length}</span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={shipmentView === "history"}
+                        onClick={() => setShipmentView("history")}
+                        className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                          shipmentView === "history"
+                            ? "bg-amber-300 text-zinc-950"
+                            : "text-zinc-300 hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {t("driver_history")}
+                        <span className={`rounded-full px-1.5 py-0.5 text-xs ${
+                          shipmentView === "history" ? "bg-zinc-950/10" : "bg-white/[0.08]"
+                        }`}>{deliveredShipments.length}</span>
+                      </button>
+                    </div>
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-300">
+                      {displayedShipments.length}
+                    </span>
+                  </div>
                 </div>
-                {groups.map((group) => (
+                {groups.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-8 text-center shadow-xl">
+                    <p className="text-zinc-400">
+                      {shipmentView === "history"
+                        ? t("driver_no_delivered_shipments")
+                        : t("driver_no_active_shipments")}
+                    </p>
+                  </div>
+                ) : groups.map((group) => (
                   <section key={group.status}>
                     <div className="mb-3 flex flex-wrap items-center gap-3">
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">

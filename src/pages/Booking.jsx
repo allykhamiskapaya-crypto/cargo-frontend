@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, ChevronUp, MapPin, Package, Route, Truck, X } from "lucide-react";
+import { ArrowRight, Check, MapPin, Package, Route, Truck, X } from "lucide-react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
@@ -59,7 +59,7 @@ async function estimateShipment(origin, destination, signal) {
   };
 }
 
-function Booking() {
+function Booking({ mobileHome = false }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
@@ -256,16 +256,25 @@ function Booking() {
     && routeStatus === "ready" && Boolean(routeCoordinates);
 
   const inputClass = "w-full rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-300/15";
+  const Main = mobileHome ? "div" : "main";
 
   return (
-    <main className="relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white">
+    <Main className={mobileHome
+      ? "relative overflow-x-clip text-white md:hidden"
+      : "relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white"}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.11),_transparent_65%)]" />
-      <div className="mx-auto max-w-7xl px-4 py-8 pb-[calc(10rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-12 lg:px-8 md:pb-0">
-        <header className="mb-8 max-w-3xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
-          <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
-          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400 sm:text-base">{t("booking_subtitle")}</p>
-        </header>
+      <div className={mobileHome
+        ? "mx-auto max-w-7xl px-0 py-0"
+        : "mx-auto max-w-7xl px-4 py-8 pb-[calc(10rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-12 lg:px-8 md:pb-0"}
+      >
+        {!mobileHome && (
+          <header className="mb-8 max-w-3xl">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
+            <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
+            <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400 sm:text-base">{t("booking_subtitle")}</p>
+          </header>
+        )}
 
         {error && (
           <div role="alert" className="mb-6 hidden rounded-2xl border border-red-400/25 bg-red-400/[0.08] px-4 py-3 text-sm text-red-200 md:block">
@@ -671,9 +680,12 @@ function Booking() {
       <button
         type="button"
         aria-haspopup="dialog"
-        aria-expanded={mobileRouteSheetOpen}
         onClick={() => setMobileRouteSheetOpen(true)}
-        className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto flex min-h-14 max-w-2xl items-center gap-3 rounded-2xl border border-amber-300/20 bg-zinc-950/95 px-4 py-3 text-left text-white shadow-xl shadow-black/40 backdrop-blur-xl transition hover:border-amber-300/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 md:hidden"
+        className={`fixed inset-x-3 ${
+          mobileHome
+            ? "bottom-[calc(0.75rem+env(safe-area-inset-bottom))]"
+            : "bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)]"
+        } z-50 mx-auto flex min-h-14 max-w-2xl items-center gap-3 rounded-2xl border border-amber-300/20 bg-zinc-950/95 px-4 py-3 text-left text-white shadow-xl shadow-black/40 backdrop-blur-xl transition hover:border-amber-300/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 md:hidden`}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-300/10 text-amber-200">
           <MapPin size={19} aria-hidden="true" />
@@ -686,9 +698,8 @@ function Booking() {
               : t("booking_where_to_hint")}
           </span>
         </span>
-        <ChevronUp size={19} className="shrink-0 text-amber-200" aria-hidden="true" />
       </button>
-    </main>
+    </Main>
   );
 }
 

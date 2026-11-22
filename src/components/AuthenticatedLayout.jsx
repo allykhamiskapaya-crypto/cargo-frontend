@@ -17,13 +17,16 @@ function AuthenticatedLayout() {
   const token = localStorage.getItem("token");
   if (!user || !token) return <Navigate to="/login" replace />;
 
+  const role = String(user.role || "").replace(/^ROLE_/, "");
+  const isCustomerHome = role === "CUSTOMER" && location.pathname === "/dashboard";
+
   return (
     <div className="min-h-screen text-white">
       <Navbar user={user} />
-      <div className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div className={isCustomerHome ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"}>
         <Outlet />
       </div>
-      <MobileBottomNav user={user} />
+      {!isCustomerHome && <MobileBottomNav user={user} />}
       <ScrollToTopButton
         aboveBottomNav
         aboveActionBar={location.pathname === "/booking"}

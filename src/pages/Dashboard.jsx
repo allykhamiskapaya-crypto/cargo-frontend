@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import ServiceTypeSelector from "../components/ServiceTypeSelector";
 import CustomerLiveMap from "../components/CustomerLiveMap";
+import Booking from "./Booking";
 import { startVisibleInterval } from "../utils/startVisibleInterval";
 
 const notificationReadKey = (userId) => `beba.customer.shipment-updates-read.${userId}`;
@@ -44,6 +45,17 @@ function Dashboard() {
   const [lastReadAt, setLastReadAt] = useState(() => getInitialReadAt(user?.id));
   const [destination, setDestination] = useState("");
   const [selectedService, setSelectedService] = useState("");
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.matchMedia("(max-width: 767px)").matches,
+  );
+
+  useEffect(() => {
+    const mobileViewport = window.matchMedia("(max-width: 767px)");
+    const updateViewport = (event) => setIsMobileViewport(event.matches);
+
+    mobileViewport.addEventListener("change", updateViewport);
+    return () => mobileViewport.removeEventListener("change", updateViewport);
+  }, []);
 
   useEffect(() => {
     if (role !== "CUSTOMER" || !user?.id) return undefined;
@@ -107,7 +119,9 @@ function Dashboard() {
 
     return (
       <main className="min-h-[calc(100vh-4rem)] text-white">
-        <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 pt-7 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-10 sm:pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-10 lg:px-8">
+          {isMobileViewport && <Booking mobileHome />}
+
           <header className="mb-8 flex flex-col gap-5 rounded-3xl border border-white/[0.08] bg-white/[0.035] p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-7">
             <div className="min-w-0">
               <h1 className="text-2xl font-bold sm:text-3xl">
@@ -182,51 +196,53 @@ function Dashboard() {
             </div>
           </header>
 
-          <section className="mb-7 grid overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/65 shadow-2xl shadow-black/20 backdrop-blur-xl lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
-            <div className="relative min-h-[400px] lg:min-h-[500px]">
-              <CustomerLiveMap />
-            </div>
-
-            <div className="bg-gradient-to-br from-white/[0.025] to-transparent p-5 sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300">{t("dashboard_primary_action_eyebrow")}</p>
-              <h2 className="mt-2 text-2xl font-bold text-white">{t("dashboard_map_title")}</h2>
-              <p className="mt-1 text-sm text-zinc-400">{t("dashboard_map_subtitle")}</p>
-
-              <label htmlFor="dashboard-destination" className="sr-only">{t("dashboard_destination_prompt")}</label>
-              <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 focus-within:border-amber-300/60 focus-within:ring-2 focus-within:ring-amber-300/30">
-                <MapPin aria-hidden="true" className="shrink-0 text-amber-300" size={19} />
-                <input
-                  id="dashboard-destination"
-                  type="text"
-                  value={destination}
-                  onChange={(event) => setDestination(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && destination.trim() && selectedService) {
-                      event.preventDefault();
-                      continueToBooking();
-                    }
-                  }}
-                  placeholder={t("dashboard_destination_prompt")}
-                  className="min-h-14 w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-                />
+          {!isMobileViewport && (
+            <section className="mb-7 grid overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/65 shadow-2xl shadow-black/20 backdrop-blur-xl lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
+              <div className="relative min-h-[400px] lg:min-h-[500px]">
+                <CustomerLiveMap />
               </div>
 
-              <div className="mt-5">
-                <h3 className="mb-3 text-sm font-semibold text-zinc-200">{t("service_type")}</h3>
-                <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} />
-              </div>
+              <div className="bg-gradient-to-br from-white/[0.025] to-transparent p-5 sm:p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300">{t("dashboard_primary_action_eyebrow")}</p>
+                <h2 className="mt-2 text-2xl font-bold text-white">{t("dashboard_map_title")}</h2>
+                <p className="mt-1 text-sm text-zinc-400">{t("dashboard_map_subtitle")}</p>
 
-              <button
-                type="button"
-                onClick={continueToBooking}
-                disabled={!destination.trim() || !selectedService}
-                className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {t("dashboard_continue_booking")}
-                <ArrowRight aria-hidden="true" size={17} />
-              </button>
-            </div>
-          </section>
+                <label htmlFor="dashboard-destination" className="sr-only">{t("dashboard_destination_prompt")}</label>
+                <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 focus-within:border-amber-300/60 focus-within:ring-2 focus-within:ring-amber-300/30">
+                  <MapPin aria-hidden="true" className="shrink-0 text-amber-300" size={19} />
+                  <input
+                    id="dashboard-destination"
+                    type="text"
+                    value={destination}
+                    onChange={(event) => setDestination(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && destination.trim() && selectedService) {
+                        event.preventDefault();
+                        continueToBooking();
+                      }
+                    }}
+                    placeholder={t("dashboard_destination_prompt")}
+                    className="min-h-14 w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                  />
+                </div>
+
+                <div className="mt-5">
+                  <h3 className="mb-3 text-sm font-semibold text-zinc-200">{t("service_type")}</h3>
+                  <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={continueToBooking}
+                  disabled={!destination.trim() || !selectedService}
+                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t("dashboard_continue_booking")}
+                  <ArrowRight aria-hidden="true" size={17} />
+                </button>
+              </div>
+            </section>
+          )}
 
           <section className="mb-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Link

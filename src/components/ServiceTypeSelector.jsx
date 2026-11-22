@@ -7,6 +7,7 @@ function ServiceTypeSelector({
   prices,
   availableVehicleCounts,
   availabilityStatus,
+  pendingFareLabel,
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
@@ -52,7 +53,7 @@ function ServiceTypeSelector({
                   </span>
                   <span className={`break-words text-sm font-extrabold tabular-nums leading-5 [overflow-wrap:anywhere] sm:text-base ${price == null ? "text-zinc-400" : "text-amber-300"}`}>
                     {price == null
-                      ? t("booking_vehicle_fare_pending")
+                      ? pendingFareLabel || t("booking_vehicle_fare_pending")
                       : `TZS ${Number(price).toLocaleString(locale)}`}
                   </span>
                 </span>

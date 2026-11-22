@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, MapPin, Package, Route, Truck } from "lucide-react";
+import { ArrowRight, Check, ChevronUp, MapPin, Package, Route, Truck, X } from "lucide-react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
@@ -86,6 +86,30 @@ function Booking() {
     counts: {},
     status: "loading",
   });
+  const [mobileRouteSheetOpen, setMobileRouteSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!mobileRouteSheetOpen) return undefined;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const desktopViewport = window.matchMedia("(min-width: 768px)");
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMobileRouteSheetOpen(false);
+    };
+    const closeOnDesktop = (event) => {
+      if (event.matches) setMobileRouteSheetOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    desktopViewport.addEventListener("change", closeOnDesktop);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+      desktopViewport.removeEventListener("change", closeOnDesktop);
+    };
+  }, [mobileRouteSheetOpen]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -182,6 +206,18 @@ function Booking() {
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
+  const handleRecentDestinationSelect = (destination) => {
+    setError("");
+    setRouteStatus("idle");
+    setEstimatedPrices(null);
+    setRouteCoordinates(null);
+    setFormData((current) => ({
+      ...current,
+      destination,
+      distanceKm: "",
+    }));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -224,7 +260,7 @@ function Booking() {
   return (
     <main className="relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.11),_transparent_65%)]" />
-      <div className="mx-auto max-w-7xl px-4 py-8 pb-16 sm:px-6 sm:py-12 sm:pb-16 lg:px-8 md:pb-0">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-[calc(10rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-12 lg:px-8 md:pb-0">
         <header className="mb-8 max-w-3xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
           <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
@@ -232,7 +268,7 @@ function Booking() {
         </header>
 
         {error && (
-          <div role="alert" className="mb-6 rounded-2xl border border-red-400/25 bg-red-400/[0.08] px-4 py-3 text-sm text-red-200">
+          <div role="alert" className="mb-6 hidden rounded-2xl border border-red-400/25 bg-red-400/[0.08] px-4 py-3 text-sm text-red-200 md:block">
             {error}
           </div>
         )}
@@ -261,7 +297,7 @@ function Booking() {
           </div>
         </section>
 
-        <form id="shipment-booking-form" onSubmit={handleSubmit} className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <form id="shipment-booking-form" onSubmit={handleSubmit} className="hidden items-start gap-5 md:grid lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="space-y-5">
             <section className="rounded-3xl border border-white/[0.08] bg-zinc-950/60 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-7">
               <div className="mb-5 flex items-start gap-3">
@@ -313,17 +349,7 @@ function Booking() {
                       <button
                         key={recentDestination}
                         type="button"
-                        onClick={() => {
-                          setError("");
-                          setRouteStatus("idle");
-                          setEstimatedPrices(null);
-                          setRouteCoordinates(null);
-                          setFormData((current) => ({
-                            ...current,
-                            destination: recentDestination,
-                            distanceKm: "",
-                          }));
-                        }}
+                        onClick={() => handleRecentDestinationSelect(recentDestination)}
                         className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-left text-xs font-medium text-zinc-300 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
                       >
                         <MapPin size={14} className="shrink-0 text-amber-200" aria-hidden="true" />
@@ -468,29 +494,200 @@ function Booking() {
           </aside>
         </form>
       </div>
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 border-t border-white/10 bg-zinc-950/95 px-3 py-2 shadow-[0_-8px_24px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden">
-        <div className="mx-auto flex min-h-12 max-w-7xl items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-              {selectedService ? t(`service_${selectedService.toLowerCase()}`) : t("booking_estimated_cost")}
-            </p>
-            <p className="truncate text-sm font-bold text-amber-200">
-              {selectedPrice == null
-                ? t("booking_estimated_cost_value")
-                : `TZS ${Number(selectedPrice).toLocaleString(locale)}`}
-            </p>
-          </div>
+      {mobileRouteSheetOpen && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center md:hidden">
           <button
-            type="submit"
-            form="shipment-booking-form"
-            disabled={!canSubmit}
-            className="inline-flex min-h-12 max-w-[55%] shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-300 to-amber-400 px-3 py-2 text-center text-xs font-bold leading-4 text-zinc-950 transition hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:px-4 min-[400px]:text-sm"
+            type="button"
+            aria-label={t("booking_close_route_sheet")}
+            onClick={() => setMobileRouteSheetOpen(false)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          />
+          <form
+            id="mobile-shipment-booking-form"
+            onSubmit={handleSubmit}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-route-sheet-title"
+            className="relative flex max-h-[92vh] max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/50"
           >
-            {loading ? t("booking_loading") : t("booking_submit")}
-            {!loading && <ArrowRight size={16} aria-hidden="true" />}
-          </button>
+            <header className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-4">
+              <div className="min-w-0">
+                <h2 id="mobile-route-sheet-title" className="text-lg font-bold text-white">
+                  {t("booking_where_to")}
+                </h2>
+                <p className="mt-1 text-sm leading-5 text-zinc-400">
+                  {t("booking_route_sheet_hint")}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label={t("booking_close_route_sheet")}
+                onClick={() => setMobileRouteSheetOpen(false)}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 transition hover:border-amber-300/30 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+              >
+                <X size={19} aria-hidden="true" />
+              </button>
+            </header>
+
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4">
+              <section className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-300">
+                  <span className="mb-2 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    {t("origin")}
+                  </span>
+                  <input
+                    type="text"
+                    name="origin"
+                    value={formData.origin}
+                    onChange={handleChange}
+                    required
+                    placeholder={t("booking_origin_placeholder")}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="block text-sm font-medium text-zinc-300">
+                  <span className="mb-2 flex items-center gap-2">
+                    <MapPin size={14} className="text-rose-300" aria-hidden="true" />
+                    {t("destination")}
+                  </span>
+                  <input
+                    type="text"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={handleChange}
+                    required
+                    placeholder={t("booking_destination_placeholder")}
+                    className={inputClass}
+                  />
+                </label>
+
+                {recentDestinations.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      {t("booking_recent_destinations")}
+                    </p>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {recentDestinations.map((recentDestination) => (
+                        <button
+                          key={recentDestination}
+                          type="button"
+                          onClick={() => handleRecentDestinationSelect(recentDestination)}
+                          className="inline-flex min-h-11 max-w-[14rem] shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-left text-xs font-medium text-zinc-300 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                        >
+                          <MapPin size={14} className="shrink-0 text-amber-200" aria-hidden="true" />
+                          <span className="truncate">{recentDestination}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {recentDestinationsStatus === "error" && (
+                  <p role="status" className="text-xs text-zinc-500">
+                    {t("booking_recent_destinations_error")}
+                  </p>
+                )}
+              </section>
+
+              {formData.origin.trim() && formData.destination.trim() && (
+                <p
+                  id="mobile-booking-route-status"
+                  role={routeStatus === "outside" ? "alert" : "status"}
+                  aria-live="polite"
+                  className={`rounded-xl border px-3 py-2 text-xs leading-5 ${
+                    routeStatus === "error" || routeStatus === "outside"
+                      ? "border-rose-300/20 bg-rose-300/[0.06] text-rose-200"
+                      : routeStatus === "ready"
+                        ? "border-emerald-300/20 bg-emerald-300/[0.05] text-emerald-200"
+                        : "border-white/10 bg-white/[0.03] text-zinc-400"
+                  }`}
+                >
+                  {routeStatus === "outside" ? t("booking_service_area_restriction")
+                    : routeStatus === "calculating" ? t("booking_route_calculating")
+                    : routeStatus === "ready"
+                      ? `${t("booking_route_ready")} ${formData.distanceKm} km`
+                      : routeStatus === "error" ? t("booking_route_error")
+                        : t("booking_route_waiting")}
+                </p>
+              )}
+
+              <label className="block text-sm font-medium text-zinc-300">
+                <span className="mb-2 block">{t("cargo_type")}</span>
+                <input
+                  type="text"
+                  name="cargoType"
+                  value={formData.cargoType}
+                  onChange={handleChange}
+                  required
+                  maxLength={100 - `${selectedService}: `.length}
+                  placeholder={t("cargo_type_placeholder")}
+                  className={inputClass}
+                />
+              </label>
+
+              {formData.origin.trim() && formData.destination.trim() && (
+                <section className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-white">{t("booking_vehicle_section")}</h3>
+                    <p className="mt-1 text-xs leading-5 text-zinc-500">
+                      {t("booking_vehicle_section_hint")}
+                    </p>
+                  </div>
+                  <ServiceTypeSelector
+                    selectedService={selectedService}
+                    onChange={setSelectedService}
+                    prices={estimatedPrices || {}}
+                    availableVehicleCounts={nearbyAvailability.counts}
+                    availabilityStatus={nearbyAvailability.status}
+                    pendingFareLabel={
+                      routeStatus === "calculating" || routeStatus === "idle"
+                        ? t("booking_route_calculating")
+                        : t("booking_vehicle_fare_unavailable")
+                    }
+                  />
+                </section>
+              )}
+            </div>
+
+            <div className="border-t border-white/10 bg-zinc-950/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              {error && (
+                <p role="alert" className="mb-3 rounded-xl border border-red-400/25 bg-red-400/[0.08] px-3 py-2 text-sm text-red-200">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={!canSubmit || !formData.cargoType.trim()}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-400/10 transition hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? t("booking_loading") : t("booking_submit")}
+                {!loading && <ArrowRight size={17} aria-hidden="true" />}
+              </button>
+            </div>
+          </form>
         </div>
-      </div>
+      )}
+
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={mobileRouteSheetOpen}
+        onClick={() => setMobileRouteSheetOpen(true)}
+        className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto flex min-h-14 max-w-2xl items-center gap-3 rounded-2xl border border-amber-300/20 bg-zinc-950/95 px-4 py-3 text-left text-white shadow-xl shadow-black/40 backdrop-blur-xl transition hover:border-amber-300/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 md:hidden"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-300/10 text-amber-200">
+          <MapPin size={19} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold">{t("booking_where_to")}</span>
+          <span className="mt-0.5 block truncate text-xs text-zinc-400">
+            {formData.origin.trim() && formData.destination.trim()
+              ? `${formData.origin.trim()} → ${formData.destination.trim()}`
+              : t("booking_where_to_hint")}
+          </span>
+        </span>
+        <ChevronUp size={19} className="shrink-0 text-amber-200" aria-hidden="true" />
+      </button>
     </main>
   );
 }

@@ -18,6 +18,33 @@ const statusColors = {
 };
 
 const trackingTimeline = ["PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED"];
+const trackingTimelineStyles = {
+  PENDING: {
+    node: "border-amber-200/50 bg-amber-300 text-zinc-950",
+    label: "text-amber-100",
+    connector: "bg-amber-200/60",
+  },
+  ASSIGNED: {
+    node: "border-sky-200/50 bg-sky-300 text-zinc-950",
+    label: "text-sky-100",
+    connector: "bg-sky-200/60",
+  },
+  PICKED_UP: {
+    node: "border-cyan-200/50 bg-cyan-300 text-zinc-950",
+    label: "text-cyan-100",
+    connector: "bg-cyan-200/60",
+  },
+  IN_TRANSIT: {
+    node: "border-orange-200/50 bg-orange-300 text-zinc-950",
+    label: "text-orange-100",
+    connector: "bg-orange-200/60",
+  },
+  DELIVERED: {
+    node: "border-emerald-200/50 bg-emerald-300 text-zinc-950",
+    label: "text-emerald-100",
+    connector: "bg-emerald-200/60",
+  },
+};
 
 function getWhatsAppUrl(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
@@ -481,20 +508,22 @@ function Tracking() {
                             entry?.status === status
                             || (status === "IN_TRANSIT" && entry?.status === "PICKED_UP")
                           ));
+                          const stepStyles = trackingTimelineStyles[status];
+                          const connectorStyles = trackingTimelineStyles[trackingTimeline[index + 1]]?.connector;
                           return (
                             <li key={status} className="relative flex gap-3 sm:flex-col sm:gap-2">
                               {index < trackingTimeline.length - 1 && (
                                 <span className={`absolute left-[11px] top-6 h-[calc(100%+0.5rem)] w-px sm:left-6 sm:top-3 sm:h-px sm:w-[calc(100%+0.75rem)] ${
-                                  completed && statusIndex > index ? "bg-sky-300/50" : "bg-white/10"
+                                  statusIndex > index ? connectorStyles : "bg-white/10"
                                 }`} />
                               )}
                               <span className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                                completed ? "border-sky-200/40 bg-sky-300 text-zinc-950" : "border-white/15 bg-zinc-900 text-zinc-500"
+                                completed ? stepStyles.node : "border-white/15 bg-zinc-900 text-zinc-500"
                               }`}>
                                 {completed ? <Check size={13} aria-hidden="true" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                               </span>
                               <div className="min-w-0 pb-3 sm:pb-0">
-                                <p className={`text-xs font-semibold ${completed ? "text-zinc-100" : "text-zinc-500"}`}>
+                                <p className={`text-xs font-semibold ${completed ? stepStyles.label : "text-zinc-500"}`}>
                                   {t(`tracking_timeline_${status.toLowerCase()}`)}
                                 </p>
                                 <p className="mt-1 text-[11px] text-zinc-500">

@@ -98,7 +98,6 @@ const statusOrder = [
   "PICKED_UP",
   "IN_TRANSIT",
   "DELIVERED",
-  "CANCELLED",
   "PENDING",
 ];
 
@@ -146,7 +145,6 @@ function DriverDashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [newOrderNotification, setNewOrderNotification] = useState(null);
   const previousOfferIds = useRef(null);
-  const previousShipmentStatuses = useRef(null);
   const hasGeolocation = typeof navigator !== "undefined" && "geolocation" in navigator;
   const [shipments, setShipments] = useState([]);
   const [offers, setOffers] = useState([]);
@@ -208,10 +206,9 @@ function DriverDashboard() {
           api.get(`/vehicles/driver/${userId}`),
         ]);
         const driverProfile = profileResponse.data;
-        const initialShipments = Array.isArray(shipmentResponse.data) ? shipmentResponse.data : [];
-        previousShipmentStatuses.current = new Map(
-          initialShipments.map((shipment) => [shipment.id, shipment.status]),
-        );
+        const initialShipments = Array.isArray(shipmentResponse.data)
+          ? shipmentResponse.data.filter((shipment) => shipment.status !== "CANCELLED")
+          : [];
         setShipments(initialShipments);
         setProfile(driverProfile);
         setProfileForm({
@@ -239,20 +236,9 @@ function DriverDashboard() {
       try {
         const response = await api.get(`/shipments/driver/${userId}`);
         if (!isActive) return;
-        const nextShipments = Array.isArray(response.data) ? response.data : [];
-        const previousStatuses = previousShipmentStatuses.current;
-        if (previousStatuses) {
-          const cancelledShipment = nextShipments.find((shipment) => (
-            shipment.status === "CANCELLED"
-            && previousStatuses.get(shipment.id) !== "CANCELLED"
-          ));
-          if (cancelledShipment) {
-            setNewOrderNotification({ ...cancelledShipment, type: "CANCELLED" });
-          }
-        }
-        previousShipmentStatuses.current = new Map(
-          nextShipments.map((shipment) => [shipment.id, shipment.status]),
-        );
+        const nextShipments = Array.isArray(response.data)
+          ? response.data.filter((shipment) => shipment.status !== "CANCELLED")
+          : [];
         setShipments(nextShipments);
       } catch {
         // Keep the last known assignments visible during transient refresh failures.
@@ -272,7 +258,9 @@ function DriverDashboard() {
       try {
         const response = await api.get("/drivers/me/jobs");
         if (!isActive) return;
-        const nextOffers = Array.isArray(response.data) ? response.data : [];
+        const nextOffers = Array.isArray(response.data)
+          ? response.data.filter((offer) => offer.status === "PENDING")
+          : [];
         const nextOfferIds = new Set(nextOffers.map((offer) => offer.id));
         if (previousOfferIds.current) {
           const newlyAvailable = nextOffers.filter((offer) => !previousOfferIds.current.has(offer.id));
@@ -594,7 +582,9 @@ function DriverDashboard() {
       setProfile(response.data);
       if (available) {
         const offersResponse = await api.get("/drivers/me/jobs");
-        setOffers(Array.isArray(offersResponse.data) ? offersResponse.data : []);
+        setOffers(Array.isArray(offersResponse.data)
+          ? offersResponse.data.filter((offer) => offer.status === "PENDING")
+          : []);
       } else {
         setOffers([]);
       }
@@ -631,6 +621,10 @@ function DriverDashboard() {
   };
 
   const respondToOffer = async (shipment, accept) => {
+    if (shipment.status !== "PENDING") {
+      setOffers((currentOffers) => currentOffers.filter((offer) => offer.id !== shipment.id));
+      return;
+    }
     setError("");
     setSuccess("");
     setActingOnOfferId(shipment.id);
@@ -891,9 +885,9 @@ function DriverDashboard() {
           >
             <Bell size={19} className="mt-0.5 shrink-0 text-amber-200" aria-hidden="true" />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{t(newOrderNotification.type === "CANCELLED" ? "driver_shipment_cancelled_toast" : "driver_new_order_toast")}</p>
+              <p className="font-semibold">{t("driver_new_order_toast")}</p>
               <p className="mt-1 text-sm text-amber-100/80">
-                {t(newOrderNotification.type === "CANCELLED" ? "driver_shipment_cancelled_notification" : "driver_new_shipment_notification", {
+                {t("driver_new_shipment_notification", {
                   id: newOrderNotification.id,
                   origin: newOrderNotification.origin,
                   destination: newOrderNotification.destination,

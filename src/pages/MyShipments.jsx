@@ -15,6 +15,33 @@ const statusStyles = {
   CANCELLED: "border-rose-200/25 bg-rose-200/10 text-rose-100",
 };
 const progressStages = ["PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED"];
+const progressStageStyles = {
+  PENDING: {
+    node: "border-amber-200 bg-amber-300 shadow-[0_0_10px_rgba(252,211,77,0.35)]",
+    label: "text-amber-100",
+    connector: "bg-amber-200/75",
+  },
+  ASSIGNED: {
+    node: "border-sky-200 bg-sky-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]",
+    label: "text-sky-100",
+    connector: "bg-sky-200/75",
+  },
+  PICKED_UP: {
+    node: "border-cyan-200 bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.3)]",
+    label: "text-cyan-100",
+    connector: "bg-cyan-200/75",
+  },
+  IN_TRANSIT: {
+    node: "border-orange-200 bg-orange-300 shadow-[0_0_10px_rgba(253,186,116,0.3)]",
+    label: "text-orange-100",
+    connector: "bg-orange-200/75",
+  },
+  DELIVERED: {
+    node: "border-emerald-200 bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.3)]",
+    label: "text-emerald-100",
+    connector: "bg-emerald-200/75",
+  },
+};
 
 function MyShipments() {
   const { t, i18n } = useTranslation();
@@ -171,15 +198,23 @@ function MyShipments() {
                         </Link>
                       </div>
                     </div>
-                    <ol className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label={t("tracking_progress")}>
-                      {progressStages.map((status, index) => {
-                        const complete = stage >= index && stage >= 0;
-                        return <li key={status} className="min-w-0">
-                          <div className={`mb-2 h-1 rounded-full ${complete ? "bg-sky-200/75" : "bg-white/10"}`} />
-                          <span className={`block truncate text-[10px] font-medium sm:text-xs ${complete ? "text-sky-100" : "text-zinc-600"}`}>{t(`tracking_timeline_${status.toLowerCase()}`)}</span>
-                        </li>;
-                      })}
-                    </ol>
+                    <div className="mt-5 overflow-x-auto" role="region" aria-label={t("tracking_progress")} tabIndex={0}>
+                      <ol className="grid min-w-[30rem] grid-cols-5 sm:min-w-0">
+                        {progressStages.map((status, index) => {
+                          const complete = stage >= index && stage >= 0;
+                          const connectorComplete = stage > index;
+                          const stepStyles = progressStageStyles[status];
+                          const connectorStyles = progressStageStyles[progressStages[index + 1]]?.connector;
+                          return <li key={status} className="relative min-w-0 text-center">
+                            {index < progressStages.length - 1 && (
+                              <span aria-hidden="true" className={`absolute left-1/2 top-[5px] h-0.5 w-full ${connectorComplete ? connectorStyles : "bg-white/10"}`} />
+                            )}
+                            <span aria-hidden="true" className={`relative z-10 mx-auto block size-3 rounded-full border ${complete ? stepStyles.node : "border-zinc-600 bg-zinc-950"}`} />
+                            <span className={`mt-2 block min-h-8 px-1 text-[10px] font-medium leading-tight sm:text-xs ${complete ? stepStyles.label : "text-zinc-600"}`}>{t(`tracking_timeline_${status.toLowerCase()}`)}</span>
+                          </li>;
+                        })}
+                      </ol>
+                    </div>
                   </article>
                 </li>
               );

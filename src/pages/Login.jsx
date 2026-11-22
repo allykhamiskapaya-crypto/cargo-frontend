@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import bebaLogo from "../assets/beba_logo.jpeg";
+import getPostAuthPath from "../utils/getPostAuthPath";
 
 function Login() {
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ function Login() {
       const response = await api.post("/auth/login", { email, password });
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/dashboard");
+      navigate(getPostAuthPath(response.data.user));
     } catch (err) {
       setError(err.response?.status === 401 ? t("invalid_credentials") : t("backend_error"));
     } finally {

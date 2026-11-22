@@ -1,8 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import MobileBottomNav from "./MobileBottomNav";
+import ScrollToTopButton from "./ScrollToTopButton";
 
 function AuthenticatedLayout() {
+  const location = useLocation();
   let user = null;
 
   try {
@@ -22,6 +24,10 @@ function AuthenticatedLayout() {
         <Outlet />
       </div>
       <MobileBottomNav user={user} />
+      <ScrollToTopButton
+        aboveBottomNav
+        aboveActionBar={location.pathname === "/booking"}
+      />
     </div>
   );
 }

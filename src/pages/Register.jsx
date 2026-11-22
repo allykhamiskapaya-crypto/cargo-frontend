@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import bebaLogo from "../assets/beba_logo.jpeg";
+import getPostAuthPath from "../utils/getPostAuthPath";
 
 function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    role: "CUSTOMER",
+  const [searchParams] = useSearchParams();
+  const [formData, setFormData] = useState(() => ({
+    role: searchParams.get("role")?.toUpperCase() === "DRIVER" ? "DRIVER" : "CUSTOMER",
     customerType: "INDIVIDUAL",
     fullName: "",
     email: "",
@@ -21,7 +23,7 @@ function Register() {
     brelaNumber: "",
     contactPersonName: "",
     officeAddress: "",
-  });
+  }));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +47,7 @@ function Register() {
           });
           localStorage.setItem("token", response.data.token);
           localStorage.setItem("user", JSON.stringify(response.data.user));
-          navigate("/dashboard");
+          navigate(getPostAuthPath(response.data.user));
           return;
         } catch {
           alert(t("register_success"));

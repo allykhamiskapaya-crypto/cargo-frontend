@@ -49,6 +49,7 @@ function App() {
             <Route path="/payment" element={<Payment />} />
             <Route path="/receipt/:shipmentId" element={<Receipt />} />
             <Route path="/driver-dashboard" element={<DriverDashboard />} />
+            <Route path="/driver-shipments" element={<DriverDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
           </Route>
         </Routes>

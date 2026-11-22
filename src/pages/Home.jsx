@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, X } from "lucide-react";
+import { BookOpen, Home as HomeIcon, Info, LogIn, Mail, Menu, Truck, UserPlus, X } from "lucide-react";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import MobileNavigationDrawer from "../components/MobileNavigationDrawer";
+import ScrollToTopButton from "../components/ScrollToTopButton";
 import bebaLogo from "../assets/beba_logo.jpeg";
 import optimizedCargoTruck from "../assets/cargo-truck-highway-optimized.jpg";
 import { startVisibleInterval } from "../utils/startVisibleInterval";
@@ -17,6 +19,7 @@ function Home() {
   const { t } = useTranslation();
   const [activeImage, setActiveImage] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
@@ -27,8 +30,6 @@ function Home() {
 
     return stopCarousel;
   }, []);
-
-  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/20 via-zinc-950 to-zinc-950 text-white">
@@ -75,28 +76,80 @@ function Home() {
           </div>
         </nav>
 
-        <div
+        <MobileNavigationDrawer
           id="home-mobile-navigation"
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out md:hidden ${
-            menuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-          }`}
+          open={menuOpen}
+          onClose={closeMenu}
+          brandTo="/"
+          brandLogo={bebaLogo}
+          logoAlt={t("brand_logo_alt")}
+          tagline={t("brand_tagline")}
+          closeLabel={t("close_menu")}
+          navigationLabel={t("mobile_navigation")}
+          headerActions={(
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to="/login"
+                onClick={closeMenu}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-center text-sm font-medium text-zinc-200 transition hover:border-amber-300/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+              >
+                <LogIn size={16} aria-hidden="true" />
+                {t("login_button")}
+              </Link>
+              <Link
+                to="/register"
+                onClick={closeMenu}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-300 px-3 py-2 text-center text-sm font-bold text-zinc-950 transition hover:bg-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+              >
+                <UserPlus size={16} aria-hidden="true" />
+                {t("register_button")}
+              </Link>
+              <Link
+                to="/register?role=DRIVER"
+                onClick={closeMenu}
+                className="col-span-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300/25 bg-amber-300/[0.06] px-3 py-2 text-center text-sm font-semibold text-amber-100 transition hover:border-amber-300/40 hover:bg-amber-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+              >
+                <Truck size={16} aria-hidden="true" />
+                {t("nav_join_driver")}
+              </Link>
+            </div>
+          )}
         >
-          <div className="overflow-hidden">
-            <nav aria-label={t("mobile_navigation")} className="space-y-1 border-t border-white/10 bg-zinc-950/90 px-4 py-3 backdrop-blur-2xl">
-              <a href="#features" onClick={closeMenu} className="flex min-h-11 items-center rounded-xl px-3 py-2 text-sm text-zinc-200 transition hover:bg-white/5 hover:text-amber-200">{t("nav_features")}</a>
-              <a href="#how" onClick={closeMenu} className="flex min-h-11 items-center rounded-xl px-3 py-2 text-sm text-zinc-200 transition hover:bg-white/5 hover:text-amber-200">{t("nav_how")}</a>
-              <a href="#contact" onClick={closeMenu} className="flex min-h-11 items-center rounded-xl px-3 py-2 text-sm text-zinc-200 transition hover:bg-white/5 hover:text-amber-200">{t("nav_contact")}</a>
-              <div className="flex gap-3 border-t border-white/10 pt-3">
-                <Link to="/login" onClick={closeMenu} className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/15 px-3 py-2 text-center text-sm font-medium text-zinc-200 transition hover:border-amber-300/60 hover:text-amber-200">
-                  {t("login_button")}
-                </Link>
-                <Link to="/register" onClick={closeMenu} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-amber-400 px-3 py-2.5 text-center text-sm font-bold text-neutral-950 transition hover:bg-amber-300">
-                  {t("get_started")}
-                </Link>
-              </div>
-            </nav>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to="/"
+              onClick={closeMenu}
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+            >
+              <HomeIcon size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
+              <span className="truncate">{t("nav_home")}</span>
+            </Link>
+            <a
+              href="#features"
+              onClick={closeMenu}
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+            >
+              <Info size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
+              <span className="truncate">{t("nav_features")}</span>
+            </a>
+            <a
+              href="#how"
+              onClick={closeMenu}
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+            >
+              <BookOpen size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
+              <span className="truncate">{t("nav_how")}</span>
+            </a>
+            <a
+              href="#contact"
+              onClick={closeMenu}
+              className="flex min-h-12 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+            >
+              <Mail size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
+              <span className="truncate">{t("nav_contact")}</span>
+            </a>
           </div>
-        </div>
+        </MobileNavigationDrawer>
       </header>
 
       <section className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-neutral-950 px-4 py-12 sm:px-8 sm:py-24 lg:px-12">
@@ -185,6 +238,7 @@ function Home() {
           <span>© {new Date().getFullYear()} {t("footer_brand_word")}. {t("footer_rights")}</span>
         </div>
       </footer>
+      <ScrollToTopButton />
     </div>
   );
 }

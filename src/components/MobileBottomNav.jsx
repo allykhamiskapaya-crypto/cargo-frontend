@@ -20,7 +20,10 @@ function MobileBottomNav({ user }) {
           { to: "/booking", label: t("mobile_book"), icon: Plus },
         ]
       : role === "DRIVER"
-        ? [{ to: "/vehicle", label: t("mobile_vehicle"), icon: Truck }]
+        ? [
+            { to: "/driver-shipments", label: t("driver_shipments_heading"), icon: Package },
+            { to: "/vehicle", label: t("mobile_vehicle"), icon: Truck },
+          ]
         : []),
   ];
 

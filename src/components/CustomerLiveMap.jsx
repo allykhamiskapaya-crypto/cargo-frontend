@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import { useTranslation } from "react-i18next";
 import api from "../api/axiosClient";
 import { isWithinAllowedServiceArea } from "../utils/serviceArea";
@@ -45,10 +45,18 @@ function distanceKm(first, second) {
   return 6371.0088 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
-function MapFocus({ position, driverPositions }) {
+function MapFocus({ position, driverPositions, routeCoordinates }) {
   const map = useMap();
 
   useEffect(() => {
+    if (routeCoordinates) {
+      map.fitBounds(
+        L.latLngBounds([routeCoordinates.pickup, routeCoordinates.dropoff]),
+        { padding: [40, 40], maxZoom: 15 },
+      );
+      return;
+    }
+
     if (position) {
       if (driverPositions.length > 0) {
         map.fitBounds(L.latLngBounds([position, ...driverPositions]), {
@@ -63,7 +71,7 @@ function MapFocus({ position, driverPositions }) {
     }
 
     map.setView(darEsSalaamCenter, 13);
-  }, [driverPositions, map, position]);
+  }, [driverPositions, map, position, routeCoordinates]);
 
   return null;
 }
@@ -84,7 +92,7 @@ function InvalidateMapSize() {
   return null;
 }
 
-function CustomerLiveMap() {
+function CustomerLiveMap({ routeCoordinates = null, onAvailabilityChange }) {
   const { t } = useTranslation();
   const [position, setPosition] = useState(null);
   const [positionAccuracy, setPositionAccuracy] = useState(null);
@@ -98,12 +106,35 @@ function CustomerLiveMap() {
     () => nearbyDrivers.map((driver) => [Number(driver.latitude), Number(driver.longitude)]),
     [nearbyDrivers],
   );
+  const availableVehicleCounts = useMemo(() => {
+    const counts = Object.fromEntries(
+      Object.keys(driverMarkerStyles).map((vehicleType) => [vehicleType, 0]),
+    );
+    nearbyDrivers.forEach((driver) => {
+      driver.vehicleTypes.forEach((vehicleType) => {
+        if (Object.hasOwn(counts, vehicleType)) counts[vehicleType] += 1;
+      });
+    });
+    return counts;
+  }, [nearbyDrivers]);
+  const availabilityStatus = nearbyDriversStatus === "error"
+    ? "error"
+    : nearbyDriversStatus === "ready"
+      ? "ready"
+      : ["locating", "live", "approximate"].includes(locationStatus) ? "loading" : "location";
   const hasPosition = Boolean(position);
   const positionRef = useRef(position);
 
   useEffect(() => {
     positionRef.current = position;
   }, [position]);
+
+  useEffect(() => {
+    onAvailabilityChange?.({
+      counts: availableVehicleCounts,
+      status: availabilityStatus,
+    });
+  }, [availabilityStatus, availableVehicleCounts, onAvailabilityChange]);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return undefined;
@@ -229,7 +260,11 @@ function CustomerLiveMap() {
         className="z-0 h-[300px] min-h-[300px] w-full bg-zinc-900 sm:h-[400px] sm:min-h-[400px] lg:h-[500px] lg:min-h-[500px]"
         aria-label={t("dashboard_map_title")}
       >
-        <MapFocus position={position} driverPositions={driverPositions} />
+        <MapFocus
+          position={position}
+          driverPositions={driverPositions}
+          routeCoordinates={routeCoordinates}
+        />
         <InvalidateMapSize />
         <TileLayer
           attribution={t("map_attribution")}
@@ -243,6 +278,33 @@ function CustomerLiveMap() {
           >
             <Popup>{t("dashboard_location_you")}</Popup>
           </CircleMarker>
+        )}
+        {routeCoordinates && (
+          <>
+            <Polyline
+              positions={[routeCoordinates.pickup, routeCoordinates.dropoff]}
+              pathOptions={{
+                color: "#f59e0b",
+                weight: 5,
+                opacity: 0.9,
+                dashArray: "8 10",
+              }}
+            />
+            <CircleMarker
+              center={routeCoordinates.pickup}
+              radius={8}
+              pathOptions={{ color: "#111111", weight: 3, fillColor: "#f59e0b", fillOpacity: 1 }}
+            >
+              <Popup>{t("origin")}</Popup>
+            </CircleMarker>
+            <CircleMarker
+              center={routeCoordinates.dropoff}
+              radius={8}
+              pathOptions={{ color: "#111111", weight: 3, fillColor: "#fb923c", fillOpacity: 1 }}
+            >
+              <Popup>{t("destination")}</Popup>
+            </CircleMarker>
+          </>
         )}
         {nearbyDrivers.map((driver) => {
           const coords = [Number(driver.latitude), Number(driver.longitude)];

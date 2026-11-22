@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, Bell, CheckCircle2, Clock3, CreditCard, Mail, MapPin, MessageCircle, Navigation, Package, Phone, Route, Truck, UserRound, Wifi, X } from "lucide-react";
 import api from "../api/axiosClient";
@@ -120,6 +120,8 @@ function DriverDashboard() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
   const navigate = useNavigate();
+  const location = useLocation();
+  const isShipmentsView = location.pathname === "/driver-shipments";
   let user = null;
 
   try {
@@ -183,6 +185,7 @@ function DriverDashboard() {
   const [actingOnOfferId, setActingOnOfferId] = useState(null);
   const [updatingShipmentId, setUpdatingShipmentId] = useState(null);
   const [deliveryConfirmationShipmentId, setDeliveryConfirmationShipmentId] = useState(null);
+  const [deliveryConfirmationLocationKey, setDeliveryConfirmationLocationKey] = useState(null);
   const [deliveryCodeInput, setDeliveryCodeInput] = useState("");
   const [deliveryCodeError, setDeliveryCodeError] = useState("");
   const [error, setError] = useState("");
@@ -199,6 +202,10 @@ function DriverDashboard() {
       || profile?.hasLicenseDocument
   );
   const shouldCollapseProfileForm = hasSavedVerificationDetails || vehicles.length > 0;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!userId) {
@@ -836,19 +843,29 @@ function DriverDashboard() {
               <Truck size={27} aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/70">{t("driver_profile")}</p>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/70">
+                {t(isShipmentsView ? "driver_shipment_overview" : "driver_profile")}
+              </p>
               <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                {profile?.fullName || userFullName || t("driver_dashboard_title")}
+                {isShipmentsView
+                  ? t("driver_shipments_heading")
+                  : profile?.fullName || userFullName || t("driver_dashboard_title")}
               </h1>
-              <p className="mt-1 text-sm text-zinc-400">{t("driver_dashboard_subtitle")}</p>
+              <p className="mt-1 text-sm text-zinc-400">
+                {t(isShipmentsView ? "driver_shipments_subtitle" : "driver_dashboard_subtitle")}
+              </p>
             </div>
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3 sm:justify-end">
             <button
               type="button"
               aria-label={t("driver_notifications_button", { count: unreadOffersCount })}
-              aria-expanded={notificationsOpen}
+              aria-expanded={isShipmentsView && notificationsOpen}
               onClick={() => {
+                if (!isShipmentsView) {
+                  navigate("/driver-shipments");
+                  return;
+                }
                 if (!notificationsOpen) markOffersAsRead();
                 setNotificationsOpen((open) => !open);
               }}
@@ -887,7 +904,37 @@ function DriverDashboard() {
           </div>
         </header>
 
-        {deliveryConfirmationShipmentId != null && (
+        <nav
+          aria-label={t("driver_dashboard_title")}
+          className="mb-6 grid grid-cols-2 gap-2 sm:inline-flex sm:rounded-xl sm:border sm:border-white/10 sm:bg-zinc-950/50 sm:p-1"
+        >
+          <Link
+            to="/driver-dashboard"
+            aria-current={!isShipmentsView ? "page" : undefined}
+            className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-center text-sm font-semibold transition sm:border-0 ${
+              !isShipmentsView
+                ? "border-amber-300/30 bg-amber-300 text-zinc-950 sm:shadow-sm"
+                : "border-white/10 bg-white/[0.03] text-zinc-300 hover:border-amber-300/30 hover:text-amber-100 sm:bg-transparent"
+            }`}
+          >
+            <UserRound size={17} aria-hidden="true" />
+            <span className="truncate">{t("driver_profile")}</span>
+          </Link>
+          <Link
+            to="/driver-shipments"
+            aria-current={isShipmentsView ? "page" : undefined}
+            className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-center text-sm font-semibold transition sm:border-0 ${
+              isShipmentsView
+                ? "border-amber-300/30 bg-amber-300 text-zinc-950 sm:shadow-sm"
+                : "border-white/10 bg-white/[0.03] text-zinc-300 hover:border-amber-300/30 hover:text-amber-100 sm:bg-transparent"
+            }`}
+          >
+            <Package size={17} aria-hidden="true" />
+            <span className="truncate">{t("driver_shipments_heading")}</span>
+          </Link>
+        </nav>
+
+        {isShipmentsView && deliveryConfirmationShipmentId != null && location.key === deliveryConfirmationLocationKey && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/75 p-2 backdrop-blur-sm sm:p-4">
             <form
               role="dialog"
@@ -970,7 +1017,7 @@ function DriverDashboard() {
             {success}
           </div>
         )}
-        {!hasGeolocation && shipments.some((shipment) => shipment.status === "IN_TRANSIT") && (
+        {isShipmentsView && !hasGeolocation && shipments.some((shipment) => shipment.status === "IN_TRANSIT") && (
           <div role="alert" className="bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm rounded-lg px-4 py-3 mb-5">
             {t("driver_gps_denied")}
           </div>
@@ -985,7 +1032,8 @@ function DriverDashboard() {
           <p className="text-zinc-500">{t("driver_loading")}</p>
         ) : (
           <>
-            <section className="mb-6 rounded-2xl border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.11] via-zinc-950/75 to-emerald-300/[0.04] p-5 shadow-xl shadow-black/15 backdrop-blur-xl sm:p-6">
+            {!isShipmentsView && (
+              <section className="mb-6 rounded-2xl border border-amber-200/20 bg-gradient-to-br from-amber-300/[0.11] via-zinc-950/75 to-emerald-300/[0.04] p-5 shadow-xl shadow-black/15 backdrop-blur-xl sm:p-6">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
                   <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70">{t("driver_commission_wallet")}</p>
@@ -1008,8 +1056,10 @@ function DriverDashboard() {
                   <p className="text-xs text-zinc-500 sm:col-span-2">{t("driver_commission_verification_note")}</p>
                 </form>
               )}
-            </section>
-            <section className="mb-8 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-4" aria-label={t("driver_dashboard_title")}>
+              </section>
+            )}
+            {isShipmentsView && (
+              <section className="mb-8 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-4" aria-label={t("driver_dashboard_title")}>
               {summary.map((item, index) => {
                 const MetricIcon = [Package, Clock3, Truck, CheckCircle2][index];
                 return (
@@ -1024,9 +1074,11 @@ function DriverDashboard() {
                   </div>
                 );
               })}
-            </section>
+              </section>
+            )}
 
-            <section className="mb-8 grid items-start gap-5 lg:grid-cols-2">
+            {!isShipmentsView && (
+              <section className="mb-8 grid items-start gap-5 lg:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-6">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
@@ -1317,8 +1369,11 @@ function DriverDashboard() {
                 </form>
                 )}
               </div>
-            </section>
+              </section>
+            )}
 
+            {isShipmentsView && (
+              <>
             <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-lg shadow-black/10 backdrop-blur-xl">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -1622,6 +1677,7 @@ function DriverDashboard() {
                                       setDeliveryCodeInput("");
                                       setDeliveryCodeError("");
                                       setDeliveryConfirmationShipmentId(shipment.id);
+                                      setDeliveryConfirmationLocationKey(location.key);
                                     } else {
                                       updateStatus(shipment);
                                     }
@@ -1694,6 +1750,8 @@ function DriverDashboard() {
                   </section>
                 ))}
               </div>
+            )}
+              </>
             )}
           </>
         )}

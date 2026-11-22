@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, BookOpen, CreditCard, Home, Info, LogOut, Mail, MapPin, Package, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
+import MobileNavigationDrawer from "./MobileNavigationDrawer";
 import bebaLogo from "../assets/beba_logo.jpeg";
 import api from "../api/axiosClient";
 import { startVisibleInterval } from "../utils/startVisibleInterval";
@@ -11,6 +12,7 @@ function Navbar({ user }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
   const role = String(user?.role || "").replace(/^ROLE_/, "");
   const seenKey = `driver-seen-offers-${user?.id}`;
   const [offers, setOffers] = useState([]);
@@ -54,6 +56,7 @@ function Navbar({ user }) {
     ...(role === "DRIVER"
       ? [
           { to: "/driver-dashboard", label: t("driver_dashboard_link") },
+          { to: "/driver-shipments", label: t("driver_shipments_heading") },
         ]
       : []),
     ...(role === "ADMIN"
@@ -62,10 +65,34 @@ function Navbar({ user }) {
   ];
 
   const handleLogout = () => {
+    closeMenu();
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     navigate("/login", { replace: true });
   };
+
+  const dashboardTo = role === "DRIVER"
+    ? "/driver-dashboard"
+    : role === "ADMIN" ? "/admin-dashboard" : "/dashboard";
+  const dashboardLabel = role === "DRIVER"
+    ? t("driver_dashboard_link")
+    : role === "ADMIN" ? t("admin_dashboard_link") : t("dashboard");
+  const mobilePrimaryLinks = role === "CUSTOMER"
+    ? [
+        { to: "/booking", label: t("book_shipment_link"), Icon: Package },
+        { to: "/shipments", label: t("dashboard_my_shipments"), Icon: Truck },
+        { to: "/tracking", label: t("feature_tracking_title"), Icon: MapPin },
+        { to: "/payment", label: t("payment_link"), Icon: CreditCard },
+      ]
+    : role === "DRIVER"
+      ? [{ to: "/driver-shipments", label: t("driver_shipments_heading"), Icon: Package }]
+      : [];
+  const mobileSecondaryLinks = [
+    { to: "/", label: t("nav_home"), Icon: Home },
+    { to: "/#features", label: t("nav_features"), Icon: Info },
+    { to: "/#how", label: t("nav_how"), Icon: BookOpen },
+    { to: "/#contact", label: t("nav_contact"), Icon: Mail },
+  ];
 
   const linkClass = ({ isActive }) =>
     `block min-h-11 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -100,7 +127,7 @@ function Navbar({ user }) {
           return next;
         });
         setMenuOpen(false);
-        navigate("/driver-dashboard");
+        navigate("/driver-shipments");
       }}
       className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.035] text-zinc-200 transition hover:border-amber-300/40 hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
     >
@@ -176,25 +203,68 @@ function Navbar({ user }) {
         </div>
       </div>
 
-      <div
+      <MobileNavigationDrawer
         id="mobile-navigation"
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out md:hidden ${
-          menuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        }`}
+        open={menuOpen}
+        onClose={closeMenu}
+        brandTo={dashboardTo}
+        brandLogo={bebaLogo}
+        logoAlt={t("brand_logo_alt")}
+        tagline={t("brand_tagline")}
+        closeLabel={t("close_menu")}
+        navigationLabel={t("mobile_navigation")}
+        headerActions={(
+          <Link
+            to={dashboardTo}
+            onClick={closeMenu}
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+          >
+            <Home size={17} aria-hidden="true" />
+            {dashboardLabel}
+          </Link>
+        )}
       >
-        <div className="overflow-hidden">
-          <nav aria-label={t("mobile_navigation")} className="space-y-1 border-t border-white/10 bg-zinc-950/90 px-4 py-3 backdrop-blur-2xl">
-            {renderLinks()}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="mt-2 min-h-11 w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-amber-200"
-            >
-              {t("logout")}
-            </button>
-          </nav>
+        <div className="space-y-5">
+          {mobilePrimaryLinks.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {mobilePrimaryLinks.map(({ to, label, Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={closeMenu}
+                  className="flex min-h-12 min-w-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                >
+                  <Icon size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
+                  <span className="min-w-0 truncate">{label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="border-t border-white/10 pt-4">
+            <div className="grid grid-cols-2 gap-2">
+              {mobileSecondaryLinks.map(({ to, label, Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={closeMenu}
+                  className="flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/[0.04] hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                >
+                  <Icon size={16} className="shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 truncate">{label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-white/[0.08] px-3 py-2.5 text-left text-sm font-medium text-zinc-400 transition hover:border-amber-300/25 hover:bg-white/[0.04] hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+          >
+            <LogOut size={16} className="text-amber-200" aria-hidden="true" />
+            {t("logout")}
+          </button>
         </div>
-      </div>
+      </MobileNavigationDrawer>
     </header>
   );
 }

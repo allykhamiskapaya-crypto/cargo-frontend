@@ -70,7 +70,7 @@ function Booking() {
     serviceTypeIds.includes(requestedService) ? requestedService : "",
   );
   const [formData, setFormData] = useState({
-    origin: "",
+    origin: searchParams.get("origin") || "",
     destination: searchParams.get("destination") || "",
     cargoType: "",
     distanceKm: "",
@@ -80,6 +80,47 @@ function Booking() {
   const [routeStatus, setRouteStatus] = useState("idle");
   const [estimatedPrices, setEstimatedPrices] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState(null);
+  const [recentDestinations, setRecentDestinations] = useState([]);
+  const [recentDestinationsStatus, setRecentDestinationsStatus] = useState("loading");
+  const [nearbyAvailability, setNearbyAvailability] = useState({
+    counts: {},
+    status: "loading",
+  });
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    const controller = new AbortController();
+    const loadRecentDestinations = async () => {
+      try {
+        const response = await api.get(`/shipments/customer/${user.id}`, {
+          signal: controller.signal,
+        });
+        const seenDestinations = new Set();
+        const destinations = (Array.isArray(response.data) ? response.data : [])
+          .sort((first, second) => (
+            new Date(second.updatedAt || second.createdAt || 0)
+              - new Date(first.updatedAt || first.createdAt || 0)
+          ))
+          .map((shipment) => shipment.destination?.trim())
+          .filter((destination) => {
+            if (!destination) return false;
+            const key = destination.toLowerCase();
+            if (seenDestinations.has(key)) return false;
+            seenDestinations.add(key);
+            return true;
+          })
+          .slice(0, 4);
+        setRecentDestinations(destinations);
+        setRecentDestinationsStatus("ready");
+      } catch {
+        if (!controller.signal.aborted) setRecentDestinationsStatus("error");
+      }
+    };
+
+    loadRecentDestinations();
+    return () => controller.abort();
+  }, [user?.id]);
 
   useEffect(() => {
     const origin = formData.origin.trim();
@@ -175,13 +216,15 @@ function Booking() {
   };
 
   const selectedPrice = selectedService ? estimatedPrices?.[selectedService] : null;
+  const canSubmit = !loading && Boolean(selectedService)
+    && routeStatus === "ready" && Boolean(routeCoordinates);
 
   const inputClass = "w-full rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-300/15";
 
   return (
     <main className="relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.11),_transparent_65%)]" />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-16 sm:px-6 sm:py-12 sm:pb-16 lg:px-8 md:pb-0">
         <header className="mb-8 max-w-3xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
           <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
@@ -195,16 +238,30 @@ function Booking() {
         )}
 
         <section className="mb-5 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/60 shadow-xl shadow-black/10 backdrop-blur-xl">
-          <div className="border-b border-white/[0.08] px-5 py-4 sm:px-7">
-            <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
-            <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
+          <div className="flex flex-col gap-2 border-b border-white/[0.08] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
+              <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
+            </div>
+            {routeCoordinates && (
+              <span className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100 sm:shrink-0 sm:self-auto">
+                <Route size={14} className="shrink-0" aria-hidden="true" />
+                <span className="truncate">
+                  {t("booking_route_preview")}
+                  {formData.distanceKm && ` · ${formData.distanceKm} km`}
+                </span>
+              </span>
+            )}
           </div>
           <div className="relative min-h-[300px] sm:min-h-[400px]">
-            <CustomerLiveMap />
+            <CustomerLiveMap
+              routeCoordinates={routeCoordinates}
+              onAvailabilityChange={setNearbyAvailability}
+            />
           </div>
         </section>
 
-        <form onSubmit={handleSubmit} className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <form id="shipment-booking-form" onSubmit={handleSubmit} className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
           <div className="space-y-5">
             <section className="rounded-3xl border border-white/[0.08] bg-zinc-950/60 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-7">
               <div className="mb-5 flex items-start gap-3">
@@ -246,6 +303,41 @@ function Booking() {
                   />
                 </label>
               </div>
+              {recentDestinations.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    {t("booking_recent_destinations")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {recentDestinations.map((recentDestination) => (
+                      <button
+                        key={recentDestination}
+                        type="button"
+                        onClick={() => {
+                          setError("");
+                          setRouteStatus("idle");
+                          setEstimatedPrices(null);
+                          setRouteCoordinates(null);
+                          setFormData((current) => ({
+                            ...current,
+                            destination: recentDestination,
+                            distanceKm: "",
+                          }));
+                        }}
+                        className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-left text-xs font-medium text-zinc-300 transition hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                      >
+                        <MapPin size={14} className="shrink-0 text-amber-200" aria-hidden="true" />
+                        <span className="max-w-[15rem] truncate">{recentDestination}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {recentDestinationsStatus === "error" && (
+                <p role="status" className="mt-3 text-xs text-zinc-500">
+                  {t("booking_recent_destinations_error")}
+                </p>
+              )}
             </section>
 
             <section className="rounded-3xl border border-white/[0.08] bg-zinc-950/60 p-5 shadow-xl shadow-black/10 backdrop-blur-xl sm:p-7">
@@ -296,7 +388,13 @@ function Booking() {
                   <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{t("booking_vehicle_section_hint")}</p>
                 </div>
               </div>
-              <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} prices={estimatedPrices || {}} />
+              <ServiceTypeSelector
+                selectedService={selectedService}
+                onChange={setSelectedService}
+                prices={estimatedPrices || {}}
+                availableVehicleCounts={nearbyAvailability.counts}
+                availabilityStatus={nearbyAvailability.status}
+              />
               {selectedService && (
                 <p className="mt-4 flex w-fit max-w-full items-start gap-2 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] px-3 py-2 text-xs leading-5 text-zinc-300">
                   <Check size={14} className="mt-0.5 shrink-0 text-amber-200" aria-hidden="true" />
@@ -360,8 +458,8 @@ function Booking() {
 
               <button
                 type="submit"
-                disabled={loading || !selectedService || routeStatus !== "ready" || !routeCoordinates}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-400/10 transition hover:-translate-y-0.5 hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!canSubmit}
+                className="hidden min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-400/10 transition hover:-translate-y-0.5 hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
               >
                 {loading ? t("booking_loading") : t("booking_submit")}
                 {!loading && <ArrowRight size={17} aria-hidden="true" />}
@@ -369,6 +467,29 @@ function Booking() {
             </section>
           </aside>
         </form>
+      </div>
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 border-t border-white/10 bg-zinc-950/95 px-3 py-2 shadow-[0_-8px_24px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden">
+        <div className="mx-auto flex min-h-12 max-w-7xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              {selectedService ? t(`service_${selectedService.toLowerCase()}`) : t("booking_estimated_cost")}
+            </p>
+            <p className="truncate text-sm font-bold text-amber-200">
+              {selectedPrice == null
+                ? t("booking_estimated_cost_value")
+                : `TZS ${Number(selectedPrice).toLocaleString(locale)}`}
+            </p>
+          </div>
+          <button
+            type="submit"
+            form="shipment-booking-form"
+            disabled={!canSubmit}
+            className="inline-flex min-h-12 max-w-[55%] shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-300 to-amber-400 px-3 py-2 text-center text-xs font-bold leading-4 text-zinc-950 transition hover:from-amber-200 hover:to-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:px-4 min-[400px]:text-sm"
+          >
+            {loading ? t("booking_loading") : t("booking_submit")}
+            {!loading && <ArrowRight size={16} aria-hidden="true" />}
+          </button>
+        </div>
       </div>
     </main>
   );

@@ -260,16 +260,16 @@ function Booking({ mobileHome = false }) {
 
   return (
     <Main className={mobileHome
-      ? "relative overflow-x-clip text-white md:hidden"
-      : "relative min-h-[calc(100vh-4rem)] overflow-x-clip text-white"}
+      ? "relative h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)] overflow-hidden text-white md:hidden"
+      : "relative h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] min-h-[24rem] overflow-hidden text-white md:h-auto md:min-h-[calc(100vh-4rem)] md:overflow-x-clip md:overflow-y-visible"}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.11),_transparent_65%)]" />
       <div className={mobileHome
-        ? "mx-auto max-w-7xl px-0 py-0"
-        : "mx-auto max-w-7xl px-4 py-8 pb-[calc(10rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-12 lg:px-8 md:pb-0"}
+        ? "mx-auto h-full max-w-7xl px-0 py-0"
+        : "mx-auto h-full max-w-7xl px-0 py-0 md:h-auto md:px-6 md:py-12 md:pb-0 lg:px-8"}
       >
         {!mobileHome && (
-          <header className="mb-8 max-w-3xl">
+          <header className="mb-8 hidden max-w-3xl md:block">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/75">{t("booking_eyebrow")}</p>
             <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{t("booking_title")}</h1>
             <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-400 sm:text-base">{t("booking_subtitle")}</p>
@@ -282,24 +282,31 @@ function Booking({ mobileHome = false }) {
           </div>
         )}
 
-        <section className="mb-5 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/60 shadow-xl shadow-black/10 backdrop-blur-xl">
-          <div className="flex flex-col gap-2 border-b border-white/[0.08] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-            <div className="min-w-0">
-              <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
-              <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
-            </div>
-            {routeCoordinates && (
-              <span className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100 sm:shrink-0 sm:self-auto">
-                <Route size={14} className="shrink-0" aria-hidden="true" />
-                <span className="truncate">
-                  {t("booking_route_preview")}
-                  {formData.distanceKm && ` · ${formData.distanceKm} km`}
+        <section className={mobileHome
+          ? "relative h-full overflow-hidden bg-zinc-900"
+          : "relative h-full overflow-hidden bg-zinc-900 md:mb-5 md:h-auto md:rounded-3xl md:border md:border-white/[0.08] md:bg-zinc-950/60 md:shadow-xl md:shadow-black/10 md:backdrop-blur-xl"}
+        >
+          {!mobileHome && (
+            <div className="hidden flex-col gap-2 border-b border-white/[0.08] px-5 py-4 md:flex md:flex-row md:items-center md:justify-between md:px-7">
+              <div className="min-w-0">
+                <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
+                <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
+              </div>
+              {routeCoordinates && (
+                <span className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100 sm:shrink-0 sm:self-auto">
+                  <Route size={14} className="shrink-0" aria-hidden="true" />
+                  <span className="truncate">
+                    {t("booking_route_preview")}
+                    {formData.distanceKm && ` · ${formData.distanceKm} km`}
+                  </span>
                 </span>
-              </span>
-            )}
-          </div>
-          <div className="relative min-h-[300px] sm:min-h-[400px]">
+              )}
+            </div>
+          )}
+          <div className="relative h-full min-h-0 md:min-h-[300px]">
             <CustomerLiveMap
+              minimal={mobileHome}
+              minimalOnMobile={!mobileHome}
               routeCoordinates={routeCoordinates}
               onAvailabilityChange={setNearbyAvailability}
             />

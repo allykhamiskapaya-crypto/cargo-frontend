@@ -92,7 +92,12 @@ function InvalidateMapSize() {
   return null;
 }
 
-function CustomerLiveMap({ routeCoordinates = null, onAvailabilityChange }) {
+function CustomerLiveMap({
+  routeCoordinates = null,
+  onAvailabilityChange,
+  minimal = false,
+  minimalOnMobile = false,
+}) {
   const { t } = useTranslation();
   const [position, setPosition] = useState(null);
   const [positionAccuracy, setPositionAccuracy] = useState(null);
@@ -257,7 +262,11 @@ function CustomerLiveMap({ routeCoordinates = null, onAvailabilityChange }) {
         zoom={13}
         maxZoom={18}
         scrollWheelZoom
-        className="z-0 h-[300px] min-h-[300px] w-full bg-zinc-900 sm:h-[400px] sm:min-h-[400px] lg:h-[500px] lg:min-h-[500px]"
+        className={minimal
+          ? "z-0 h-full min-h-full w-full bg-zinc-900"
+          : minimalOnMobile
+            ? "z-0 h-full min-h-full w-full bg-zinc-900 md:h-[400px] md:min-h-[400px] lg:h-[500px] lg:min-h-[500px]"
+            : "z-0 h-[300px] min-h-[300px] w-full bg-zinc-900 sm:h-[400px] sm:min-h-[400px] lg:h-[500px] lg:min-h-[500px]"}
         aria-label={t("dashboard_map_title")}
       >
         <MapFocus
@@ -335,40 +344,50 @@ function CustomerLiveMap({ routeCoordinates = null, onAvailabilityChange }) {
           );
         })}
       </MapContainer>
-      <span className="pointer-events-none absolute left-2 top-2 z-[400] inline-flex max-w-[calc(100%_-_1rem)] items-center gap-2 break-words rounded-full border border-white/15 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur sm:left-4 sm:top-4">
-        <span className={`h-2 w-2 rounded-full ${locationStatus === "live" ? "animate-pulse bg-sky-400" : "bg-amber-300"}`} />
-        {t(`dashboard_location_${locationStatus}`)}
-      </span>
-      {position && (
-        <span
-          role="status"
-          className="pointer-events-none absolute left-2 top-12 z-[400] max-w-[calc(100%_-_1rem)] break-words rounded-full border border-white/15 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:top-4"
-        >
-          {nearbyDriversStatus === "ready" && nearbyDrivers.length === 0
-            ? t("nearby_drivers_empty")
-            : t(`nearby_drivers_${nearbyDriversStatus}`, { count: nearbyDrivers.length })}
-        </span>
-      )}
-      {locationStatus !== "live" && locationStatus !== "locating" && (
-        <div role="status" className="absolute bottom-2 left-2 right-2 z-[400] flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-300 shadow-lg sm:bottom-4 sm:left-4 sm:right-4">
-          <span className="min-w-0 break-words leading-5">
-            {locationStatus === "approximate"
-              ? t("dashboard_location_approximate_hint", {
-                accuracy: positionAccuracy == null ? "—" : Math.round(positionAccuracy),
-              })
-              : t(`dashboard_location_${locationStatus}_hint`)}
+      {!minimal && (
+        <>
+          <span className={`pointer-events-none absolute left-2 top-2 z-[400] inline-flex max-w-[calc(100%_-_1rem)] items-center gap-2 break-words rounded-full border border-white/15 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur sm:left-4 sm:top-4 ${
+            minimalOnMobile ? "hidden md:inline-flex" : ""
+          }`}>
+            <span className={`h-2 w-2 rounded-full ${locationStatus === "live" ? "animate-pulse bg-sky-400" : "bg-amber-300"}`} />
+            {t(`dashboard_location_${locationStatus}`)}
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              setLocationStatus("locating");
-              setLocationRetryCount((count) => count + 1);
-            }}
-            className="min-h-11 shrink-0 rounded-md bg-amber-300 px-3 py-2 font-semibold text-zinc-950 hover:bg-amber-200"
-          >
-            {t("dashboard_location_retry")}
-          </button>
-        </div>
+          {position && (
+            <span
+              role="status"
+              className={`pointer-events-none absolute left-2 top-12 z-[400] max-w-[calc(100%_-_1rem)] break-words rounded-full border border-white/15 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur sm:left-auto sm:right-4 sm:top-4 ${
+                minimalOnMobile ? "hidden md:block" : ""
+              }`}
+            >
+              {nearbyDriversStatus === "ready" && nearbyDrivers.length === 0
+                ? t("nearby_drivers_empty")
+                : t(`nearby_drivers_${nearbyDriversStatus}`, { count: nearbyDrivers.length })}
+            </span>
+          )}
+          {locationStatus !== "live" && locationStatus !== "locating" && (
+            <div role="status" className={`absolute bottom-2 left-2 right-2 z-[400] flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-zinc-950/90 px-3 py-2 text-xs text-zinc-300 shadow-lg sm:bottom-4 sm:left-4 sm:right-4 ${
+              minimalOnMobile ? "hidden md:flex" : ""
+            }`}>
+              <span className="min-w-0 break-words leading-5">
+                {locationStatus === "approximate"
+                  ? t("dashboard_location_approximate_hint", {
+                    accuracy: positionAccuracy == null ? "—" : Math.round(positionAccuracy),
+                  })
+                  : t(`dashboard_location_${locationStatus}_hint`)}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationStatus("locating");
+                  setLocationRetryCount((count) => count + 1);
+                }}
+                className="min-h-11 shrink-0 rounded-md bg-amber-300 px-3 py-2 font-semibold text-zinc-950 hover:bg-amber-200"
+              >
+                {t("dashboard_location_retry")}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </>
   );

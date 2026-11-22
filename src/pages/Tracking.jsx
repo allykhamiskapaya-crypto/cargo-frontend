@@ -429,7 +429,7 @@ function Tracking() {
                 <div
                   key={s?.id}
                   onClick={() => viewTracking(s)}
-                  className={`cursor-pointer rounded-3xl border bg-gradient-to-br from-white/[0.045] to-zinc-950/70 p-5 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 sm:p-6 ${
+                  className={`cursor-pointer rounded-3xl border bg-gradient-to-br from-white/[0.045] to-zinc-950/70 p-4 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 sm:p-6 ${
                     Number(selectedShipmentId) === Number(s?.id)
                       ? "border-sky-300/30 shadow-sky-950/10"
                       : "border-white/[0.08] hover:border-white/15"
@@ -451,21 +451,21 @@ function Tracking() {
                       </div>
                     </div>
                     <span
-                      className={`w-fit shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                      className={`max-w-full shrink-0 rounded-full border px-3 py-1.5 text-center text-xs font-semibold leading-5 ${
                         statusColors[s?.status] || "bg-zinc-800 text-zinc-400 border-zinc-700"
                       }`}
                     >
                       {s?.status ? t(`driver_status_${String(s.status).toLowerCase()}`, { defaultValue: s.status }) : t("tracking_status_unknown")}
                     </span>
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-400">
+                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs leading-5 text-zinc-400">
                     <span className="inline-flex items-center gap-1.5"><Package size={14} className="text-zinc-500" aria-hidden="true" />{s?.cargoType || "—"}</span>
                     <span>{s?.weightKg ?? "—"} kg</span>
                     {s?.price != null && <span>{Number(s.price).toLocaleString(locale)} TZS</span>}
                   </div>
-                  <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
                     {["PENDING", "ASSIGNED"].includes(s?.status) && (
-                      <button type="button" onClick={(event) => { event.stopPropagation(); setCancelError(""); setCancelTarget(s); }} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/[0.15]">{t("customer_cancel_order")}</button>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); setCancelError(""); setCancelTarget(s); }} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
                     )}
                     <button
                       type="button"
@@ -473,7 +473,7 @@ function Tracking() {
                         event.stopPropagation();
                         viewTracking(s);
                       }}
-                      className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-sky-300 px-4 py-2 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-sky-200"
+                      className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2 text-center text-sm font-bold leading-5 text-zinc-950 transition hover:-translate-y-0.5 hover:bg-sky-200 sm:w-auto"
                     >
                       <Navigation size={15} aria-hidden="true" />
                       {t("tracking_track_live")}

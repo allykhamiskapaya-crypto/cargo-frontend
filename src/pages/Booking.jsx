@@ -199,7 +199,7 @@ function Booking() {
             <h2 className="font-semibold text-white">{t("booking_nearby_drivers_title")}</h2>
             <p className="mt-1 text-sm text-zinc-500">{t("booking_nearby_drivers_hint")}</p>
           </div>
-          <div className="relative min-h-[400px]">
+          <div className="relative min-h-[300px] sm:min-h-[400px]">
             <CustomerLiveMap />
           </div>
         </section>
@@ -298,9 +298,9 @@ function Booking() {
               </div>
               <ServiceTypeSelector selectedService={selectedService} onChange={setSelectedService} prices={estimatedPrices || {}} />
               {selectedService && (
-                <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber-300/15 bg-amber-300/[0.05] px-3 py-1.5 text-xs text-zinc-300">
-                  <Check size={14} className="text-amber-200" aria-hidden="true" />
-                  {t("booking_service_selected")}: <span className="font-medium text-amber-100">{t(`service_${selectedService.toLowerCase()}`)}</span>
+                <p className="mt-4 flex w-fit max-w-full items-start gap-2 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] px-3 py-2 text-xs leading-5 text-zinc-300">
+                  <Check size={14} className="mt-0.5 shrink-0 text-amber-200" aria-hidden="true" />
+                  <span className="min-w-0 break-words">{t("booking_service_selected")}: <span className="font-medium text-amber-100">{t(`service_${selectedService.toLowerCase()}`)}</span></span>
                 </p>
               )}
             </section>
@@ -332,27 +332,27 @@ function Booking() {
               </div>
 
               <div className="space-y-3 border-b border-white/[0.08] pb-5 text-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <span className="text-zinc-400">{t("service_type")}</span>
-                  <span className="text-right font-medium text-zinc-100">
+                  <span className="min-w-0 max-w-[60%] break-words text-right font-medium text-zinc-100">
                     {selectedService ? t(`service_${selectedService.toLowerCase()}`) : t("booking_summary_not_selected")}
                   </span>
                 </div>
                 <div className="flex items-start justify-between gap-3">
                   <span className="text-zinc-400">{t("cargo_type")}</span>
-                  <span className="max-w-[60%] text-right font-medium text-zinc-100">
+                  <span className="min-w-0 max-w-[60%] break-words text-right font-medium text-zinc-100">
                     {formData.cargoType.trim() || t("booking_summary_not_selected")}
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <span className="text-zinc-400">{t("route_distance_km")}</span>
-                  <span className="font-medium text-zinc-100">{formData.distanceKm ? `${formData.distanceKm} km` : "—"}</span>
+                  <span className="shrink-0 font-medium text-zinc-100">{formData.distanceKm ? `${formData.distanceKm} km` : "—"}</span>
                 </div>
               </div>
 
               <div className="py-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{t("booking_estimated_cost")}</p>
-                <p className="mt-1 text-2xl font-bold tracking-tight text-amber-100">
+                <p className="mt-1 text-xl font-bold leading-tight tracking-tight text-amber-100 [overflow-wrap:anywhere] sm:text-2xl">
                   {selectedPrice == null ? t("booking_estimated_cost_value") : `TZS ${Number(selectedPrice).toLocaleString(locale)}`}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{t("booking_estimated_cost_note")}</p>

@@ -707,14 +707,14 @@ function AdminDashboard() {
                       }
                       if (section === "complaints") setComplaintStatusFilter("");
                     }}
-                    className="group rounded-2xl border border-white/10 bg-zinc-950/80 p-4 text-left shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-amber-400/60 hover:bg-zinc-900"
+                    className="group flex h-full flex-col rounded-2xl border border-white/10 bg-zinc-950/80 p-4 text-left shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-amber-400/60 hover:bg-zinc-900"
                   >
                     <span className="flex items-start justify-between gap-3">
                       <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{t(label)}</span>
                       <span className="rounded-lg border border-amber-400/20 bg-amber-400/10 p-2 text-amber-300"><MetricIcon size={17} aria-hidden="true" /></span>
                     </span>
-                    <span className="mt-3 block truncate text-2xl font-bold tracking-tight text-white sm:text-3xl">{value}</span>
-                    <span className="mt-1 block truncate text-xs text-zinc-500">{detail}</span>
+                    <span className="mt-3 block text-2xl font-bold leading-tight tracking-tight text-white [overflow-wrap:anywhere] sm:text-3xl">{value}</span>
+                    <span className="mt-auto block pt-2 text-xs leading-5 text-zinc-500">{detail}</span>
                   </button>
                 ))}
               </div>
@@ -760,10 +760,10 @@ function AdminDashboard() {
                 </label>
                 <select value={shipmentStatus} onChange={(event) => { setLoadingSection(true); setShipmentStatus(event.target.value); }}
                   aria-label={t("admin_filter_shipment_status")}
-                  className="min-h-11 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white">
+                  className="min-h-11 w-full min-w-0 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white sm:w-auto">
                   {shipmentStatuses.map((status) => <option key={status || "all"} value={status}>{shipmentStatusLabel(t, status)}</option>)}
                 </select>
-                <label className="flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 px-3 text-sm text-zinc-300">
+                <label className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-zinc-800 px-3 text-sm leading-5 text-zinc-300 sm:w-auto">
                   <input type="checkbox" checked={delayedOnly} onChange={(event) => { setLoadingSection(true); setDelayedOnly(event.target.checked); }} />
                   {t("admin_delayed_only")}
                 </label>
@@ -804,12 +804,12 @@ function AdminDashboard() {
                                 {shipmentStatusLabel(t, shipment.status)}
                               </span>
                             </span>
-                            <span className="mt-3 grid gap-2 text-sm">
-                              <span><span className="text-zinc-500">{t("admin_customer")}: </span>{shipment.customerName}</span>
-                              <span><span className="text-zinc-500">{t("admin_driver")}: </span>{shipment.driverName || t("admin_unassigned")}</span>
-                              <span><span className="text-zinc-500">{t("admin_vehicle")}: </span>{shipment.vehiclePlateNumber || t("admin_not_linked")}</span>
-                              <span className="break-words"><span className="text-zinc-500">{t("admin_route")}: </span>{shipment.origin} → {shipment.destination}</span>
-                              <span className="break-words text-xs text-zinc-500">{shipment.createdAt} · {shipment.updatedAt}</span>
+                            <span className="mt-3 grid gap-2 text-sm leading-5 min-[520px]:grid-cols-2">
+                              <span className="min-w-0 break-words"><span className="text-zinc-500">{t("admin_customer")}: </span>{shipment.customerName}</span>
+                              <span className="min-w-0 break-words"><span className="text-zinc-500">{t("admin_driver")}: </span>{shipment.driverName || t("admin_unassigned")}</span>
+                              <span className="min-w-0 break-words"><span className="text-zinc-500">{t("admin_vehicle")}: </span>{shipment.vehiclePlateNumber || t("admin_not_linked")}</span>
+                              <span className="min-w-0 break-words min-[520px]:col-span-2"><span className="text-zinc-500">{t("admin_route")}: </span>{shipment.origin} → {shipment.destination}</span>
+                              <span className="break-words text-xs text-zinc-500 min-[520px]:col-span-2">{shipment.createdAt} · {shipment.updatedAt}</span>
                             </span>
                           </button>
                         </li>
@@ -826,7 +826,7 @@ function AdminDashboard() {
                               <td className="px-3 py-3">{shipment.customerName}</td>
                               <td className="px-3 py-3">{shipment.driverName || t("admin_unassigned")}</td>
                               <td className="px-3 py-3">{shipment.vehiclePlateNumber || t("admin_not_linked")}</td>
-                              <td className="px-3 py-3">{shipment.origin} → {shipment.destination}</td>
+                              <td className="max-w-[18rem] break-words px-3 py-3 leading-5">{shipment.origin} → {shipment.destination}</td>
                               <td className="px-3 py-3">
                                 <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${shipmentStatusBadgeClass(shipment.status, shipment.delayed)}`}>
                                   {shipmentStatusLabel(t, shipment.status)}
@@ -846,7 +846,7 @@ function AdminDashboard() {
                           : <ol className="space-y-3">{shipmentHistory.map((entry, index) => (
                             <li key={`${entry.timestamp}-${index}`} className="border-l border-amber-400/50 pl-3 text-sm">
                               <p className="font-medium text-amber-200">{shipmentStatusLabel(t, entry.status)}</p>
-                              <p className="text-zinc-400">{entry.timestamp} · {entry.location || t("admin_no_location")}</p>
+                              <p className="break-words leading-5 text-zinc-400">{entry.timestamp} · {entry.location || t("admin_no_location")}</p>
                             </li>
                           ))}</ol>}
                     </aside>
@@ -983,8 +983,8 @@ function AdminDashboard() {
                       setComplaintEvidence(null);
                       setComplaintActions([]);
                     }} className="w-full rounded-xl border border-white/10 bg-zinc-950/80 p-4 text-left hover:border-amber-400/50">
-                      <span className="flex justify-between gap-2 font-semibold"><span>{t("admin_complaint_number", { id: complaint.id })}</span><span className="text-amber-200">{complaintStatusLabel(t, complaint.status)}</span></span>
-                      <span className="mt-2 block text-xs text-zinc-400">{t("admin_shipment_number", { id: complaint.shipmentId })} · {complaint.reporterName}</span>
+                      <span className="flex flex-wrap justify-between gap-2 font-semibold"><span>{t("admin_complaint_number", { id: complaint.id })}</span><span className="text-amber-200">{complaintStatusLabel(t, complaint.status)}</span></span>
+                      <span className="mt-2 block break-words text-xs leading-5 text-zinc-400">{t("admin_shipment_number", { id: complaint.shipmentId })} · {complaint.reporterName}</span>
                       <span className="mt-2 block line-clamp-2 text-sm text-zinc-300">{complaint.description}</span>
                     </button>
                   ))}
@@ -993,8 +993,8 @@ function AdminDashboard() {
               {!selectedComplaint?.complaint ? <p className="text-sm text-zinc-500">{t("admin_select_complaint")}</p> : (
                 <>
                     <h2 className="text-lg font-semibold">{t("admin_complaint_number", { id: selectedComplaint.complaint.id })}</h2>
-                  <p className="mt-2 text-sm text-zinc-300">{selectedComplaint.complaint.description}</p>
-                    <p className="mt-2 text-xs text-zinc-500">{t("admin_shipment_number", { id: selectedComplaint.complaint.shipmentId })} · {selectedComplaint.complaint.reporterName} · {t("admin_assigned_reviewer")}: {selectedComplaint.complaint.assignedReviewerName || t("admin_unassigned")}</p>
+                  <p className="mt-2 break-words text-sm leading-6 text-zinc-300">{selectedComplaint.complaint.description}</p>
+                    <p className="mt-2 break-words text-xs leading-5 text-zinc-500">{t("admin_shipment_number", { id: selectedComplaint.complaint.shipmentId })} · {selectedComplaint.complaint.reporterName} · {t("admin_assigned_reviewer")}: {selectedComplaint.complaint.assignedReviewerName || t("admin_unassigned")}</p>
                   {complaintEvidence && (
                     <div className="my-4">
                       {complaintEvidence.contentType === "application/pdf"
@@ -1044,7 +1044,7 @@ function AdminDashboard() {
                       <p className="mt-1 text-sm text-amber-100">TSh {Number(payment.amount).toLocaleString(locale)} · {payment.reference}</p>
                       <p className="mt-1 text-xs text-zinc-500">{payment.submittedAt ? new Date(payment.submittedAt).toLocaleString(locale) : ""}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "reject")} className="min-h-10 rounded-lg border border-rose-200/25 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-200/10 disabled:opacity-50">{t("admin_commission_reject")}</button>
                       <button type="button" disabled={acting} onClick={() => reviewCommissionPayment(payment.id, "verify")} className="min-h-10 rounded-lg bg-emerald-200 px-3 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-100 disabled:opacity-50">{t("admin_commission_verify")}</button>
                     </div>
@@ -1062,7 +1062,7 @@ function AdminDashboard() {
                   <article key={notification.id} className={`rounded-xl border p-4 ${notification.read ? "border-white/10 bg-zinc-950/70" : "border-amber-400/40 bg-amber-400/5"}`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div><p className="font-medium">{notification.message}</p><p className="mt-1 text-xs text-zinc-400">{notification.type} · {notification.priority} · {notification.timestamp}</p></div>
-                      <div className="flex gap-3">
+                      <div className="flex flex-wrap gap-3">
                         {notification.relatedLink && <a href={notification.relatedLink} className="text-sm text-amber-200 underline">{t("admin_open_related_record")}</a>}
                         {!notification.read && <button type="button" onClick={() => markNotificationRead(notification.id)} className="text-sm text-amber-200 underline">{t("admin_mark_read")}</button>}
                       </div>

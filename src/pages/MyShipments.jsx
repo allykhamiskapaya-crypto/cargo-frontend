@@ -138,15 +138,15 @@ function MyShipments() {
           </div>
           <div className="bg-zinc-950/75 p-4 backdrop-blur-xl sm:p-5">
             <p className="text-xs text-zinc-400">{t("shipments_total_value")}</p>
-            <p className="mt-2 inline-flex items-center gap-2 text-2xl font-bold text-amber-100"><CircleDollarSign size={19} aria-hidden="true" />TSh {shipments.reduce((total, shipment) => total + (Number(shipment.price) || 0), 0).toLocaleString(locale)}</p>
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xl font-bold leading-tight text-amber-100 sm:text-2xl"><CircleDollarSign size={19} className="shrink-0" aria-hidden="true" /><span className="min-w-0 [overflow-wrap:anywhere]">TSh {shipments.reduce((total, shipment) => total + (Number(shipment.price) || 0), 0).toLocaleString(locale)}</span></p>
           </div>
         </section>
 
         <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <p className="text-sm text-zinc-400">{t("shipments_showing", { count: visibleShipments.length })}</p>
-          <label className="flex items-center gap-3 text-sm text-zinc-400">
+          <label className="flex w-full items-center justify-between gap-3 text-sm text-zinc-400 sm:w-auto sm:justify-start">
             <span>{t("shipments_filter")}</span>
-            <select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-h-10 rounded-xl border border-white/10 bg-zinc-950/80 px-3 text-sm text-zinc-100 focus:border-amber-200/50 focus:outline-none">
+            <select value={filter} onChange={(event) => setFilter(event.target.value)} className="min-h-10 min-w-0 max-w-[70%] rounded-xl border border-white/10 bg-zinc-950/80 px-3 text-sm text-zinc-100 focus:border-amber-200/50 focus:outline-none sm:max-w-none">
               {statuses.map((status) => <option key={status} value={status}>{status === "ALL" ? t("shipments_all_statuses") : t(`driver_status_${status.toLowerCase()}`)}</option>)}
             </select>
           </label>
@@ -189,11 +189,11 @@ function MyShipments() {
                           <span className="font-semibold text-amber-100">{shipment.price == null ? t("booking_cost_pending") : `TSh ${Number(shipment.price).toLocaleString(locale)}`}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2 sm:flex-row">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end lg:flex-col">
                         {(["PENDING", "ASSIGNED"].includes(shipment.status)) && (
-                          <button type="button" onClick={() => { setCancelError(""); setCancelTarget(shipment); }} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/[0.15]">{t("customer_cancel_order")}</button>
+                          <button type="button" onClick={() => { setCancelError(""); setCancelTarget(shipment); }} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-rose-200/25 bg-rose-300/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-rose-100 transition hover:bg-rose-300/[0.15] sm:w-auto">{t("customer_cancel_order")}</button>
                         )}
-                        <Link to={`/tracking?id=${shipment.id}`} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-200/25 bg-sky-200/[0.08] px-4 py-2 text-sm font-semibold text-sky-100 transition hover:bg-sky-200/[0.14]">
+                        <Link to={`/tracking?id=${shipment.id}`} className="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-200/25 bg-sky-200/[0.08] px-4 py-2 text-center text-sm font-semibold leading-5 text-sky-100 transition hover:bg-sky-200/[0.14] sm:w-auto">
                           {t("tracking_track_live")}<ArrowRight size={15} aria-hidden="true" />
                         </Link>
                       </div>

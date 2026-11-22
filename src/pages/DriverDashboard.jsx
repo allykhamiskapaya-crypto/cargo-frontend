@@ -776,19 +776,19 @@ function DriverDashboard() {
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/25 via-zinc-950 to-zinc-950 text-white">
       <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <header className="mb-8 flex flex-col justify-between gap-5 rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:flex-row sm:items-center sm:gap-6 sm:p-8">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-300/10 text-amber-200">
               <Truck size={27} aria-hidden="true" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/70">{t("driver_profile")}</p>
-              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-3xl">
                 {profile?.fullName || userFullName || t("driver_dashboard_title")}
               </h1>
               <p className="mt-1 text-sm text-zinc-400">{t("driver_dashboard_subtitle")}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
             <button
               type="button"
               aria-label={t("driver_notifications_button", { count: unreadOffersCount })}
@@ -806,7 +806,7 @@ function DriverDashboard() {
                 </span>
               )}
             </button>
-            <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold ${
+            <span className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3.5 py-2 text-center text-sm font-semibold leading-5 ${
               profile?.available
                 ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
                 : "border-zinc-700 bg-zinc-900/80 text-zinc-300"
@@ -1114,9 +1114,9 @@ function DriverDashboard() {
                 {vehicles.length > 0 && (
                   <div className="mb-4 space-y-2">
                     {vehicles.map((vehicle) => (
-                      <div key={vehicle.id} className="flex justify-between gap-3 rounded-lg bg-zinc-900/80 px-3 py-2 text-sm">
-                        <span className="text-white">{vehicle.plateNumber}</span>
-                        <span className="text-zinc-400">{vehicle.vehicleType} · {vehicle.capacityKg} kg</span>
+                      <div key={vehicle.id} className="flex flex-col gap-1 rounded-lg bg-zinc-900/80 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                        <span className="font-medium text-white">{vehicle.plateNumber}</span>
+                        <span className="break-words text-zinc-400">{vehicle.vehicleType} · {vehicle.capacityKg} kg</span>
                       </div>
                     ))}
                   </div>
@@ -1255,14 +1255,14 @@ function DriverDashboard() {
               ) : (
                 <div className="divide-y divide-zinc-800">
                   {offers.filter((shipment) => shipment.status === "PENDING").map((shipment) => (
-                    <article key={shipment.id} className="flex flex-col justify-between gap-4 rounded-xl border border-white/[0.08] bg-zinc-950/45 p-4 transition hover:border-sky-300/25 sm:flex-row sm:items-center">
-                      <div>
-                        <h3 className="font-medium text-white">#{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}</h3>
-                        <p className="mt-1 text-sm text-zinc-500">{shipment.cargoType} · {shipment.weightKg} kg</p>
+                    <article key={shipment.id} className="flex min-w-0 flex-col justify-between gap-4 rounded-xl border border-white/[0.08] bg-zinc-950/45 p-4 transition hover:border-sky-300/25 sm:flex-row sm:items-center">
+                      <div className="min-w-0">
+                        <h3 className="break-words font-medium leading-5 text-white">#{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}</h3>
+                        <p className="mt-1 break-words text-sm leading-5 text-zinc-500">{shipment.cargoType} · {shipment.weightKg} kg</p>
                       </div>
-                      <div className="flex gap-2">
-                        <button type="button" disabled={actingOnOfferId === shipment.id} onClick={() => respondToOffer(shipment, false)} className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">{t("driver_reject_job")}</button>
-                        <button type="button" disabled={actingOnOfferId === shipment.id || profile?.isRestricted} onClick={() => respondToOffer(shipment, true)} className="rounded-lg bg-amber-400 px-3 py-2 text-sm font-semibold text-zinc-950 hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50">{t("driver_accept_job")}</button>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <button type="button" disabled={actingOnOfferId === shipment.id} onClick={() => respondToOffer(shipment, false)} className="min-h-10 w-full rounded-lg border border-zinc-700 px-3 py-2 text-center text-sm leading-5 text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 sm:w-auto">{t("driver_reject_job")}</button>
+                        <button type="button" disabled={actingOnOfferId === shipment.id || profile?.isRestricted} onClick={() => respondToOffer(shipment, true)} className="min-h-10 w-full rounded-lg bg-amber-400 px-3 py-2 text-center text-sm font-semibold leading-5 text-zinc-950 hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{t("driver_accept_job")}</button>
                       </div>
                     </article>
                   ))}
@@ -1287,7 +1287,7 @@ function DriverDashboard() {
                 </div>
                 {groups.map((group) => (
                   <section key={group.status}>
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="mb-3 flex flex-wrap items-center gap-3">
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
                         {t(`driver_status_${group.status.toLowerCase()}`)}
                       </h3>
@@ -1307,8 +1307,8 @@ function DriverDashboard() {
                               : "border-white/[0.08] hover:border-white/15"
                           }`}>
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                              <div>
-                                <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+                              <div className="min-w-0">
+                                <h3 className="flex min-w-0 flex-wrap items-center gap-2 break-words text-lg font-semibold leading-snug text-white">
                                   <MapPin size={17} className="shrink-0 text-amber-200" aria-hidden="true" />
                                   #{shipment.id}: {shipment.origin} {t("common_to")} {shipment.destination}
                                 </h3>
@@ -1319,7 +1319,7 @@ function DriverDashboard() {
                                 </p>
                               </div>
                               <span
-                                className={`text-xs font-medium px-3 py-1 rounded-full border w-fit ${
+                                className={`max-w-full shrink-0 rounded-full border px-3 py-1 text-center text-xs font-medium leading-5 ${
                                   statusColors[shipment.status] ||
                                   "bg-zinc-800 text-zinc-400 border-zinc-700"
                                 }`}
@@ -1335,19 +1335,19 @@ function DriverDashboard() {
                                       {t("driver_customer_information")}
                                     </h4>
                                     <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                                      <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
+                                      <div className="min-w-0 rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
                                         <dt className="flex items-center gap-1.5 text-xs text-zinc-500">
                                           <UserRound size={13} aria-hidden="true" />{t("driver_customer_name")}
                                         </dt>
-                                        <dd className="mt-1 font-medium text-white">
+                                        <dd className="mt-1 break-words font-medium text-white">
                                           {shipment.customer?.fullName || t("driver_information_unavailable")}
                                         </dd>
                                       </div>
-                                      <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
+                                      <div className="min-w-0 rounded-xl border border-white/[0.06] bg-zinc-950/40 p-3">
                                         <dt className="flex items-center gap-1.5 text-xs text-zinc-500">
                                           <Phone size={13} aria-hidden="true" />{t("driver_customer_phone")}
                                         </dt>
-                                        <dd className="mt-1 font-medium text-white">
+                                        <dd className="mt-1 break-words font-medium text-white">
                                           {shipment.customer?.phone ? (
                                             <a href={`tel:${shipment.customer.phone}`} className="hover:text-sky-200">
                                               {shipment.customer.phone}

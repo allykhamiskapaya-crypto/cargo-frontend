@@ -21,7 +21,7 @@ function ServiceTypeSelector({ selectedService, onChange, prices }) {
               selected
                 ? "border-amber-300/50 bg-gradient-to-br from-amber-300/[0.14] to-amber-300/[0.035] text-amber-100 shadow-lg shadow-amber-950/20"
                 : "border-white/[0.08] bg-zinc-950/45 text-zinc-300 hover:border-white/20 hover:bg-white/[0.04]"
-            } ${id === "SCHEDULE_AHEAD" ? "col-span-2" : ""}`}
+            } ${id === "SCHEDULE_AHEAD" ? "sm:col-span-2" : ""}`}
           >
             <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${background} ${color} ring-1 ring-white/5 transition group-hover:scale-105`} style={{ "--service-icon-bg": "rgb(24 24 27)" }}>
               <Icon type={id} size={38} />
